@@ -1,6 +1,7 @@
 'use strict';
 
-let restify = require('restify');
+let restify = require('restify')
+  , fs = require('fs');
 
 createServer();
 
@@ -14,9 +15,11 @@ function createServer() {
   server.use(restify.authorizationParser());
   server.use(restify.bodyParser());
 
-  server.get('/hello/:name', (req, res, next) => {
-    res.send('hello ' + req.params.name);
-    return next();
+  fs.readdirSync('./routes').forEach(file => {
+    if (file.substr(-3) === '.js') {
+      let route = require('./routes/' + file);
+      route(server);
+    }
   });
 
   server.listen(8080, () => {
