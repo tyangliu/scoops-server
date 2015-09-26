@@ -6,65 +6,33 @@ let restify = require('restify')
   , SubmissionsController = require('../controllers/forms/SubmissionsController');
 
 function formsRoutes(server) {
-  let formsController = new FormsController();
+  let controller = new FormsController()
+    , path = '/forms'
+    , idPath = `${path}/:formId`;
 
-  server.get(
-    {path: '/forms', version: '1.0.0'},
-    formsController.getForms
-  );
-  server.post(
-    {path: '/forms', version: '1.0.0'},
-    formsController.postForms
-  );
+  server.get({path, version: '1.0.0'}, controller.getForms);
+  server.post({path, version: '1.0.0'}, controller.postForms);
 
-  server.get(
-    {path: '/forms/:formId', version: '1.0.0'},
-    formsController.getFormById
-  );
-  server.del(
-    {path: '/forms/:formId', version: '1.0.0'},
-    formsController.deleteFormById
-  );
-  server.patch(
-    {path: '/forms/:formId', version: '1.0.0'},
-    formsController.patchFormById
-  );
-  server.put(
-    {path: '/forms/:formId', version: '1.0.0'},
-    formsController.putFormById
-  );
+  server.get({path: idPath, version: '1.0.0'}, controller.getFormById);
+  server.del({path: idPath, version: '1.0.0'}, controller.deleteFormById);
+  server.patch({path: idPath, version: '1.0.0'}, controller.patchFormById);
+  server.put({path: idPath, version: '1.0.0'}, controller.putFormById);
 
   return server;
 }
 
 function submissionsRoutes(server) {
-  let submissionsController = new SubmissionsController();
+  let controller = new SubmissionsController()
+    , path = '/forms/:formId/submissions'
+    , idPath = `${path}/:subId`;
 
-  server.get(
-    {path: '/forms/:formId/submissions', version: '1.0.0'},
-    submissionsController.getSubmissions
-  );
-  server.post(
-    {path: '/forms/:formId/submissions', version: '1.0.0'},
-    submissionsController.postSubmissions
-  );
+  server.get({path, version: '1.0.0'}, controller.getSubmissions);
+  server.post({path, version: '1.0.0'}, controller.postSubmissions);
 
-  server.get(
-    {path: '/forms/:formId/submissions/:subId', version: '1.0.0'},
-    submissionsController.getSubmissionById
-  );
-  server.del(
-    {path: '/forms/:formId/submissions/:subId', version: '1.0.0'},
-    submissionsController.deleteSubmissionById
-  );
-  server.patch(
-    {path: '/forms/:formId/submissions/:subId', version: '1.0.0'},
-    submissionsController.patchSubmissionById
-  );
-  server.patch(
-    {path: '/forms/:formId/submissions/:subId', version: '1.0.0'},
-    submissionsController.putSubmissionsById
-  );
+  server.get({path: idPath, version: '1.0.0'}, controller.getSubmissionById);
+  server.del({path: idPath, version: '1.0.0'}, controller.deleteSubmissionById);
+  server.patch({path: idPath, version: '1.0.0'}, controller.patchSubmissionById);
+  server.put({path: idPath, version: '1.0.0'}, controller.putSubmissionsById);
 
   return server;
 }
