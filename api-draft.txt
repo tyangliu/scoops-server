@@ -1,0 +1,49 @@
+Users
+
+  GET /v1/users
+  POST /v1/users
+
+  GET /v1/users/{id}
+  GET /v1/users/current
+  GET /v1/users/{id|current}/prefs
+
+Articles
+
+  GET /v1/articles
+  POST /v1/articles
+
+  GET /v1/articles/{id}
+  DELETE /v1/articles/{id}
+  PATCH /v1/articles/{id}
+  PUT /v1/articles/{id}
+
+Events
+
+  GET /v1/events
+  POST /v1/events
+
+  GET /v1/events/{id}
+  DELETE /v1/events/{id}
+  PATCH /v1/events/{id}
+  PUT /v1/events/{id}
+
+  GET /v1/events/{id}/attendees
+  POST /v1/events/{id}/attendees
+  DELETE /v1/events/{id}/attendees/{id}
+
+Forms
+
+  GET /v1/forms
+  POST /v1/forms
+
+  GET /v1/forms/{id}
+  DELETE /v1/forms/{id}
+  PATCH /v1/forms/{id}
+
+  GET /v1/forms/{id}/submissions
+  POST /v1/forms/{id}/submissions
+
+  GET /v1/forms/{id}/submissions/{id2}
+  DELETE /v1/forms/{id}/submissions/{id2}
+  PATCH /v1/forms/{id}/submissions/{id2}
+  PUT /v1/forms/{id}/submissions/{id2}
