@@ -1,0 +1,13 @@
+*   = partition key
+**  = clustering key
+*** = index
+
+[]  = list
+{}  = set
+<>  = map
+
+users:         uuid* | email | name | timestamp
+users_auth:    email* | uuid** | password
+users_prefs:   uuid* | prefs<key:value>
+
+// how to handle uploads?
