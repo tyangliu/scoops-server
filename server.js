@@ -1,6 +1,7 @@
 'use strict';
 
 let restify = require('restify')
+  , validator = require('restify-joi-middleware')
   , fs = require('fs');
 
 createServer();
@@ -14,6 +15,7 @@ function createServer() {
   server.use(restify.queryParser());
   server.use(restify.authorizationParser());
   server.use(restify.bodyParser());
+  server.use(validator());
 
   fs.readdirSync('./routes').forEach(file => {
     if (file.substr(-3) === '.js') {

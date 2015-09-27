@@ -16,6 +16,8 @@
     "joi": "^6.7.1",
     "lodash": "^3.10.1",
     "nconf": "^0.8.0",
-    "restify": "^4.0.3"
+    "restify": "^4.0.3",
+    "restify-joi-middleware": "0.0.8",
+    "slugid": "^1.1.0"
   }
 }
