@@ -7,7 +7,7 @@ let patterns = {
   shortString: Joi.string().alphanum().min(2).max(255),
   email: Joi.string().email(),
   password: Joi.string().regex(regex.password),
-  base64Uuid: Joi.string().regex(regex.uuidBase64)
+  base64Uuid: Joi.string().regex(regex.base64Uuid)
 };
 
 module.exports = patterns;
