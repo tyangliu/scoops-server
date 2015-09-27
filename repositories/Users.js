@@ -17,4 +17,3 @@ class User {
 class UserRepository {
   constructor() { this.db = db(); }
 }
-

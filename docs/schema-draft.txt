@@ -9,27 +9,27 @@
 
 users:
 
-  user_id* | email | name | password | role | permissions{} | preferences<> | created_at
+  user_id* | email | name | password | groups{} | permissions{} | preferences<> | created_at
 
 users_by_email:
 
-  email* | user_id** | name | password | role | permissions{} | preferences<>
+  email* | user_id** | name | password | groups{} | permissions{} | preferences<>
 
 forms:
 
   form_id* | name | description | created_at | created_by | last_modified_at | last_modified_by |
-  revision_id | expires_on | access_roles{} | access_users{}
+  revision_id | expires_on | access_groups{} | access_users{}
 
 form_questions:
 
   form_id* | question_id** | form_name^ | form_description^ | form_expires_on |
-  access_roles{} | access_users{}
+  access_groups{} | access_users{}
   question_text | question_type | question_choices{} | revision_id
 
 forms_by_creator:
 
   user_id* | form_id** | name | description | created_at |
-  last_modified_at | last_modified_by | access_roles{} | access_users{}
+  last_modified_at | last_modified_by | access_groups{} | access_users{}
 
 form_responses:
 
