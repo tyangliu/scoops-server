@@ -24,7 +24,7 @@ function formsRoutes(server) {
 function submissionsRoutes(server) {
   let controller = new SubmissionsController()
     , path = '/forms/:formId/submissions'
-    , idPath = `${path}/:subId`;
+    , idPath = `${path}/:submissionId`;
 
   server.get({path, version: '1.0.0'}, controller.getSubmissions);
   server.post({path, version: '1.0.0'}, controller.postSubmissions);
