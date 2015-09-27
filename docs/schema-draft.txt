@@ -9,11 +9,11 @@
 
 users:
 
-  user_id* | email | name | password | groups{} | permissions{} | preferences<> | created_at
+  user_id* | email | name | password | groups{} | preferences<> | created_at
 
 users_by_email:
 
-  email* | user_id** | name | password | groups{} | permissions{} | preferences<>
+  email* | user_id** | name | password | groups{} | preferences<> | created_at
 
 forms:
 
