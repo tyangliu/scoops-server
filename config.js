@@ -1,7 +1,6 @@
 'use strict';
 
-let fs = require('fs')
-  , nconf = require('nconf');
+let nconf = require('nconf');
 
 nconf.file(__dirname + '/config.json');
 
