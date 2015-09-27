@@ -107,7 +107,7 @@ let queries = [
   `,
   // form_responses_by_creator_response_id
   `
-    CREATE TABLE IF NOT EXISTS form_responses_by_creator (
+    CREATE TABLE IF NOT EXISTS form_responses_by_creator_response_id (
       created_by uuid,
       response_id timeuuid,
       form_id timeuuid,
