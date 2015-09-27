@@ -4,8 +4,7 @@ Users
   POST /v1/users
 
   GET /v1/users/{id}
-  GET /v1/users/current
-  GET /v1/users/{id|current}/prefs
+  GET /v1/users/me
 
 Articles
 
@@ -40,10 +39,10 @@ Forms
   DELETE /v1/forms/{id}
   PATCH /v1/forms/{id}
 
-  GET /v1/forms/{id}/submissions
-  POST /v1/forms/{id}/submissions
+  GET /v1/forms/{id}/responses
+  POST /v1/forms/{id}/responses
 
-  GET /v1/forms/{id}/submissions/{id2}
-  DELETE /v1/forms/{id}/submissions/{id2}
-  PATCH /v1/forms/{id}/submissions/{id2}
-  PUT /v1/forms/{id}/submissions/{id2}
+  GET /v1/forms/{id}/responses/{id2}
+  DELETE /v1/forms/{id}/responses/{id2}
+  PATCH /v1/forms/{id}/responses/{id2}
+  PUT /v1/forms/{id}/responses/{id2}

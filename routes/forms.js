@@ -3,7 +3,7 @@
 let restify = require('restify')
   , _ = require('lodash')
   , FormsController = require('../controllers/forms/FormsController')
-  , SubmissionsController = require('../controllers/forms/SubmissionsController');
+  , ResponsesController = require('../controllers/forms/ResponsesController');
 
 function formsRoutes(server) {
   let controller = new FormsController()
@@ -21,20 +21,20 @@ function formsRoutes(server) {
   return server;
 }
 
-function submissionsRoutes(server) {
-  let controller = new SubmissionsController()
+function responsesRoutes(server) {
+  let controller = new ResponsesController()
     , path = '/forms/:formId/submissions'
     , idPath = `${path}/:submissionId`;
 
-  server.get({path, version: '1.0.0'}, controller.getSubmissions);
-  server.post({path, version: '1.0.0'}, controller.postSubmissions);
+  server.get({path, version: '1.0.0'}, controller.getResponses);
+  server.post({path, version: '1.0.0'}, controller.postResponses);
 
-  server.get({path: idPath, version: '1.0.0'}, controller.getSubmissionById);
-  server.del({path: idPath, version: '1.0.0'}, controller.deleteSubmissionById);
-  server.patch({path: idPath, version: '1.0.0'}, controller.patchSubmissionById);
-  server.put({path: idPath, version: '1.0.0'}, controller.putSubmissionsById);
+  server.get({path: idPath, version: '1.0.0'}, controller.getResponseById);
+  server.del({path: idPath, version: '1.0.0'}, controller.deleteResponseById);
+  server.patch({path: idPath, version: '1.0.0'}, controller.patchResponseById);
+  server.put({path: idPath, version: '1.0.0'}, controller.putResponsesById);
 
   return server;
 }
 
-module.exports = _.flow(formsRoutes, submissionsRoutes);
+module.exports = _.flow(formsRoutes, responsesRoutes);

@@ -1,13 +1,49 @@
 *   = partition key
 **  = clustering key
 *** = index
+^   = static
 
 []  = list
 {}  = set
 <>  = map
 
-users:         uuid* | email | name | timestamp
-users_auth:    email* | uuid** | password
-users_prefs:   uuid* | prefs<key:value>
+users:
 
-// how to handle uploads?
+  user_id* | email | name | password | role | permissions{} | preferences<> | created_at
+
+users_by_email:
+
+  email* | user_id** | name | password | role | permissions{} | preferences<>
+
+forms:
+
+  form_id* | name | description | created_at | created_by | last_modified_at | last_modified_by |
+  revision_id | expires_on | access_roles{} | access_users{}
+
+form_questions:
+
+  form_id* | question_id** | form_name^ | form_description^ | form_expires_on |
+  access_roles{} | access_users{}
+  question_text | question_type | question_choices{} | revision_id
+
+forms_by_creator:
+
+  user_id* | form_id** | name | description | created_at |
+  last_modified_at | last_modified_by | access_roles{} | access_users{}
+
+form_responses:
+
+  form_id* | response_id** | form_name^ | form_description^ |
+  user_id | answers<question:answer> | revision_id
+
+form_responses_by_user:
+
+  user_id* | form_id** | response_id |
+  form_name | form_description | answers<question:answer> | revision_id
+
+form_responses_by_user_response_id
+
+  user_id* | response_id** | form_id |
+  form_name | form_description | answers<question:answer> | revision_id
+
+// how to handle file uploads?
