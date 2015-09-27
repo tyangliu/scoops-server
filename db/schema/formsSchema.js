@@ -11,7 +11,7 @@ let queries = [
       expires_at timestamp,
 
       access_groups set<text>,
-      access_users set<text>
+      access_users set<text>,
 
       created_at timestamp,
       created_by uuid,
@@ -50,18 +50,18 @@ let queries = [
     CREATE TABLE IF NOT EXISTS form_questions (
       form_id timeuuid,
       question_id timeuuid,
-      
+
       name text STATIC,
       description text STATIC,
       expires_at timestamp STATIC,
-      
+
       access_groups set<text> STATIC,
       access_users set<text> STATIC,
-      
+
       question_text text,
       question_type text,
       question_choices set<text>,
-      
+
       PRIMARY KEY (form_id, question_id)
     );
   `,
@@ -70,7 +70,7 @@ let queries = [
     CREATE TABLE IF NOT EXISTS form_responses (
       form_id timeuuid,
       response_id timeuuid,
-      
+
       name text STATIC,
       description text STATIC,
       expires_at timestamp STATIC,

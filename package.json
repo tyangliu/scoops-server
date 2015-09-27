@@ -10,6 +10,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "async": "^1.4.2",
     "bcryptjs": "^2.3.0",
     "cassandra-driver": "^2.2.1",
     "lodash": "^3.10.1",

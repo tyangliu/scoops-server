@@ -8,7 +8,8 @@ let cassandra = require('cassandra-driver')
 function getClient() {
   client = client || new cassandra.Client({
     contactPoints: [config.host],
-    authProvider: new AuthProvider(config.username, config.password)
+    authProvider: new AuthProvider(config.username, config.password),
+    keyspace: config.keyspace
   });
   return client;
 }

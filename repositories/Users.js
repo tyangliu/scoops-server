@@ -1,6 +1,6 @@
 'use strict';
 
-let db = require('./dbClient');
+let db = require('../db/dbClient')();
 
 class User {
   constructor(id, username, password, role, permissions=[], preferences={}, timestamp) {
@@ -15,5 +15,5 @@ class User {
 }
 
 class UserRepository {
-  constructor() { this.db = db(); }
+  constructor() { this.db = db; }
 }
