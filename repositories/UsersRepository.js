@@ -7,11 +7,11 @@ let db = require('../db/dbClient')()
 
 class User {
 
-  constructor({
+  constructor(
     userId, email, name, hashedPassword,
-    groups=[], preferences={},
+    groups, preferences,
     createdAt, lastModifiedAt, lastModifiedBy
-  }) {
+  ) {
     this.userId = userId;
     this.email = email;
     this.name = name;
@@ -36,23 +36,23 @@ class UsersRepository {
     return user => user;
   }
 
-  createUser(email, password, name, voucher=null) {
+  createUser(email, password, name, voucher) {
     async.waterfall([
       // (1) generate hashed password
       bcrypt.hash.bind(null, password, 8),
       // (2) build user model
       (err, hash, callback) => {
-        let user = new User({
-          userId: cassandra.types.Uuid.random(),
-          email,
-          name,
-          hashedPassword: hash,
-          groups: [],
-          preferences: {},
-          createdAt: 'TODO',
-          lastModifiedAt: 'TODO',
-          lastModifiedBy: 'TODO'
-        });
+        let user = new User(
+          cassandra.types.Uuid.random(), // userId
+          email, // email
+          name, // name
+          hash, // hashedPassword
+          new Set(), // groups
+          new Map(), // preferences
+          Date.now().toISOString(), // createdAt
+          null, // lastModifiedAt
+          null // lastModifiedBy
+        );
 
         if (voucher) {
           user = this.redeemVoucher(voucher)(user);
@@ -70,7 +70,11 @@ class UsersRepository {
           ) VALUES (?,?,?,?,?,?,?,?,?) IF NOT EXISTS;
         `;
 
-        callback(null, user);
+        this.db.execute(query, [
+          user.userId, user.email, user.name, user.hashedPassword,
+          user.groups, user.preferences, //todo
+          user.createdAt, user.lastModifiedAt, user.lastModifiedBy
+        ], { prepare: true }, (err, result) => callback(err, user));
       },
       // (4) persist to users_by_email table
       (user, callback) => {
@@ -82,7 +86,11 @@ class UsersRepository {
           ) VALUES (?,?,?,?,?,?,?,?,?) IF NOT EXISTS;
         `;
 
-        callback(null, user);
+        this.db.execute(query, [
+          user.email, user.userId, user.name, user.hashedPassword,
+          user.groups, user.preferences, //todo
+          user.createdAt, user.lastModifiedAt, user.lastModifiedBy
+        ], { prepare: true }, (err, result) => callback(err, user));
       }
       // (5) pass user object or error to caller callback
     ], (err, user) => {
@@ -91,3 +99,5 @@ class UsersRepository {
   }
 
 }
+
+module.exports = UsersRepository;

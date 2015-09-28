@@ -1,6 +1,12 @@
 'use strict';
 
+let UsersRepository = require('../../repositories/UsersRepository');
+
 class UsersController {
+
+  constructor() {
+    this.repository = new UsersRepository();
+  }
 
   getUsers(req, res) {
     res.send('getUsers unimplemented');
