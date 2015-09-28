@@ -3,7 +3,8 @@
 let db = require('../db/dbClient')()
   , cassandra = require('cassandra-driver')
   , bcrypt = require('bcryptjs')
-  , async = require('async');
+  , async = require('async')
+  , slugid = require('slugid');
 
 class User {
 
@@ -47,8 +48,8 @@ class UsersRepository {
           email, // email
           name, // name
           hash, // hashedPassword
-          new Set(), // groups
-          new Map(), // preferences
+          [], // groups
+          {}, // preferences
           Date.now().toISOString(), // createdAt
           null, // lastModifiedAt
           null // lastModifiedBy
@@ -66,8 +67,10 @@ class UsersRepository {
           INSERT INTO users (
             user_id, email, name, hashed_password,
             groups, preferences,
-            created_at, last_modified_at, last_modified_by
-          ) VALUES (?,?,?,?,?,?,?,?,?) IF NOT EXISTS;
+            created_at, last_modified_at, last_modified_by)
+          VALUES
+            (?,?,?,?,?,?,?,?,?)
+          IF NOT EXISTS;
         `;
 
         this.db.execute(query, [
@@ -84,8 +87,10 @@ class UsersRepository {
           INSERT INTO users_by_email (
             email, user_id, name, hashed_password,
             groups, preferences,
-            created_at, last_modified_at, last_modified_by
-          ) VALUES (?,?,?,?,?,?,?,?,?) IF NOT EXISTS;
+            created_at, last_modified_at, last_modified_by)
+          VALUES
+            (?,?,?,?,?,?,?,?,?)
+          IF NOT EXISTS;
         `;
 
         this.db.execute(query, [
@@ -96,8 +101,45 @@ class UsersRepository {
           callback(err, user)
         );
       }
-      // (5) resplve/reject promise
+      // (5) resolve/reject promise
     ], (err, user) => err ? reject(err) : resolve(user)));
+
+    return promise;
+  }
+
+  findUserById(userId) {
+    let promise = new Promise((resolve, reject) => {
+      let query = `
+        SELECT
+          user_id, email, name, hashed_password,
+          groups, preferences,
+          created_at, last_modified_at, last_modified_by
+        FROM
+          users
+        WHERE
+          user_id = ?;
+      `;
+
+      this.db.execute(query, [userId], { prepare: true }, (err, result) => {
+        if (err) { reject(err); }
+        if (result.rows.length <= 0) { resolve(null); }
+
+        let row = result.rows[0];
+        let user = new User(
+          slugid.encode(row.user_id),
+          row.email,
+          row.name,
+          row.hashed_password,
+          row.groups,
+          row.preferences,
+          row.created_at,
+          row.last_modified_at,
+          row.last_modified_by ? slugid.encode(row.last_modified_by) : null
+        );
+
+        resolve(user);
+      });
+    });
 
     return promise;
   }
