@@ -37,7 +37,7 @@ class UsersRepository {
   }
 
   createUser(email, password, name, voucher) {
-    async.waterfall([
+    let promise = new Promise((resolve, reject) => {async.waterfall([
       // (1) generate hashed password
       bcrypt.hash.bind(null, password, 8),
       // (2) build user model
@@ -72,9 +72,11 @@ class UsersRepository {
 
         this.db.execute(query, [
           user.userId, user.email, user.name, user.hashedPassword,
-          user.groups, user.preferences, //todo
+          user.groups, user.preferences,
           user.createdAt, user.lastModifiedAt, user.lastModifiedBy
-        ], { prepare: true }, (err, result) => callback(err, user));
+        ], { prepare: true }, (err, result) =>
+          callback(err, user)
+        );
       },
       // (4) persist to users_by_email table
       (user, callback) => {
@@ -88,14 +90,16 @@ class UsersRepository {
 
         this.db.execute(query, [
           user.email, user.userId, user.name, user.hashedPassword,
-          user.groups, user.preferences, //todo
+          user.groups, user.preferences,
           user.createdAt, user.lastModifiedAt, user.lastModifiedBy
-        ], { prepare: true }, (err, result) => callback(err, user));
+        ], { prepare: true }, (err, result) =>
+          callback(err, user)
+        );
       }
-      // (5) pass user object or error to caller callback
-    ], (err, user) => {
+      // (5) resplve/reject promise
+    ], (err, user) => err ? reject(err) : resolve(user))});
 
-    });
+    return promise;
   }
 
 }
