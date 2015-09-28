@@ -37,7 +37,7 @@ class UsersRepository {
   }
 
   createUser(email, password, name, voucher) {
-    let promise = new Promise((resolve, reject) => {async.waterfall([
+    let promise = new Promise((resolve, reject) => async.waterfall([
       // (1) generate hashed password
       bcrypt.hash.bind(null, password, 8),
       // (2) build user model
@@ -97,7 +97,7 @@ class UsersRepository {
         );
       }
       // (5) resplve/reject promise
-    ], (err, user) => err ? reject(err) : resolve(user))});
+    ], (err, user) => err ? reject(err) : resolve(user)));
 
     return promise;
   }
