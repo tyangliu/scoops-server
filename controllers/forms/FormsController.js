@@ -1,6 +1,12 @@
 'use strict';
 
+let FormsRepository = require('../../repositories/FormsRepository');
+
 class FormsController {
+
+  constructor() {
+    this.repository = new FormsRepository();
+  }
 
   getForms(req, res) {
     res.send('getForms unimplemented');

@@ -3,8 +3,7 @@
 let db = require('../db/dbClient')()
   , cassandra = require('cassandra-driver')
   , bcrypt = require('bcryptjs')
-  , async = require('async')
-  , slugid = require('slugid');
+  , async = require('async');
 
 class User {
 
@@ -42,7 +41,7 @@ class UsersRepository {
       // (1) generate hashed password
       bcrypt.hash.bind(null, password, 8),
       // (2) build user model
-      (err, hash, callback) => {
+      (hash, callback) => {
         let user = new User(
           cassandra.types.Uuid.random(), // userId
           email, // email
@@ -99,7 +98,7 @@ class UsersRepository {
           callback(err, user)
         );
       }
-      // (5) resolve/reject promise
+      // (6) resolve/reject promise
     ], (err, user) => err ? reject(err) : resolve(user)));
 
     return promise;
@@ -118,15 +117,13 @@ class UsersRepository {
           user_id = ?;
       `;
 
-      userId = slugid.decode(userId);
-
       this.db.execute(query, [userId], { prepare: true }, (err, result) => {
         if (err) { reject(err); }
         if (result.rows.length <= 0) { resolve(null); }
 
         let row = result.rows[0];
         let user = new User(
-          slugid.encode(row.user_id),
+          row.user_id,
           row.email,
           row.name,
           row.hashed_password,
@@ -134,7 +131,7 @@ class UsersRepository {
           row.preferences,
           row.created_at,
           row.last_modified_at,
-          row.last_modified_by ? slugid.encode(row.last_modified_by) : null
+          row.last_modified_by
         );
 
         resolve(user);
@@ -163,7 +160,7 @@ class UsersRepository {
 
         let row = result.rows[0];
         let user = new User(
-          slugid.encode(row.user_id),
+          row.user_id,
           row.email,
           row.name,
           row.hashed_password,
@@ -171,7 +168,7 @@ class UsersRepository {
           row.preferences,
           row.created_at,
           row.last_modified_at,
-          row.last_modified_by ? slugid.encode(row.last_modified_by) : null
+          row.last_modified_by
         );
 
         resolve(user);
