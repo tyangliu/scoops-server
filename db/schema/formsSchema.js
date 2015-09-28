@@ -1,6 +1,28 @@
 'use strict';
 
 let queries = [
+  // question
+  `
+    CREATE TYPE IF NOT EXISTS question (
+      question_id timeuuid,
+      type text,
+      label text,
+      description text,
+
+      choices list<text>
+    );
+  `,
+  // answer
+  `
+    CREATE TYPE IF NOT EXISTS answer (
+      question_id timeuuid,
+      question_type text,
+      question_label text,
+      question_description text,
+
+      value text
+    );
+  `,
   // forms
   `
     CREATE TABLE IF NOT EXISTS forms (
@@ -19,6 +41,8 @@ let queries = [
       last_modified_at timestamp,
       last_modified_by uuid,
       revision_id timeuuid,
+
+      questions list<frozen <question>>,
 
       PRIMARY KEY (form_id)
     );
@@ -42,27 +66,9 @@ let queries = [
       last_modified_by uuid,
       revision_id timeuuid,
 
+      questions list<frozen <question>>,
+
       PRIMARY KEY (created_by, form_id)
-    );
-  `,
-  // form_questions
-  `
-    CREATE TABLE IF NOT EXISTS form_questions (
-      form_id timeuuid,
-      question_id timeuuid,
-
-      name text STATIC,
-      description text STATIC,
-      expires_at timestamp STATIC,
-
-      access_groups set<text> STATIC,
-      access_users set<uuid> STATIC,
-
-      question_text text,
-      question_type text,
-      question_choices set<text>,
-
-      PRIMARY KEY (form_id, question_id)
     );
   `,
   // form_responses
@@ -80,7 +86,7 @@ let queries = [
       last_modified_at timestamp,
       revision_id timeuuid,
 
-      answers map<text,text>,
+      answers list<frozen <answer>>,
 
       PRIMARY KEY (form_id, response_id)
     );
@@ -100,7 +106,7 @@ let queries = [
       last_modified_at timestamp,
       revision_id timeuuid,
 
-      answers map<text,text>,
+      answers list<frozen <answer>>,
 
       PRIMARY KEY (created_by, form_id)
     )
@@ -120,7 +126,7 @@ let queries = [
       last_modified_at timestamp,
       revision_id timeuuid,
 
-      answers map<text,text>,
+      answers list<frozen <answer>>,
 
       PRIMARY KEY (created_by, response_id)
     )

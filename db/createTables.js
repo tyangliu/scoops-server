@@ -6,14 +6,16 @@ let async = require('async')
 
 let queries = [];
 
-fs.readdirSync('./schema').forEach(file => {
+fs.readdirSync(__dirname + '/schema').forEach(file => {
   if (file.substr(-3) === '.js') {
     let schema = require('./schema/' + file);
     queries = queries.concat(schema);
   }
 });
 
-async.map(queries,
+// use mapSeries to preserve execution order, as Cassandra UDT definitions
+// must be executed before any other definitions that use them
+async.mapSeries(queries,
   (query, next)  => db.execute(query, next),
   (err, results) => {
     err ? console.log(err)
