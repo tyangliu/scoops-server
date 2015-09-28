@@ -92,8 +92,10 @@ class FormsRepository {
             access_groups, access_users,
             created_at, created_by,
             last_modified_at, last_modified_by, revision_id,
-            questions
-          )
+            questions)
+          VALUES
+            (?,?,?,?,?,?,?,?,?,?,?,?)
+          IF NOT EXISTS;
         `;
 
         this.db.execute(query, [
@@ -113,8 +115,10 @@ class FormsRepository {
             access_groups, access_users,
             created_at,
             last_modified_at, last_modified_by, revision_id,
-            questions
-          )
+            questions)
+          VALUES
+            (?,?,?,?,?,?,?,?,?,?,?,?)
+          IF NOT EXISTS;
         `;
 
         this.db.execute(query, [
