@@ -105,6 +105,7 @@ class FormsRepository {
           callback(err, form)
         );
       },
+      // (4) persist to forms_by_creator table
       (form, callback) => {
         let query = `
           INSERT INTO forms_by_creator (
