@@ -55,9 +55,7 @@ class UsersRepository {
           null // lastModifiedBy
         );
 
-        if (voucher) {
-          user = this.redeemVoucher(voucher)(user);
-        }
+        if (voucher) { user = this.redeemVoucher(voucher)(user); }
 
         callback(null, user);
       },
@@ -120,7 +118,46 @@ class UsersRepository {
           user_id = ?;
       `;
 
+      userId = slugid.decode(userId);
+
       this.db.execute(query, [userId], { prepare: true }, (err, result) => {
+        if (err) { reject(err); }
+        if (result.rows.length <= 0) { resolve(null); }
+
+        let row = result.rows[0];
+        let user = new User(
+          slugid.encode(row.user_id),
+          row.email,
+          row.name,
+          row.hashed_password,
+          row.groups,
+          row.preferences,
+          row.created_at,
+          row.last_modified_at,
+          row.last_modified_by ? slugid.encode(row.last_modified_by) : null
+        );
+
+        resolve(user);
+      });
+    });
+
+    return promise;
+  }
+
+  findUserByEmail(email) {
+    let promise = new Promise((resolve, reject) => {
+      let query = `
+        SELECT
+          email, user_id, name, hashed_password,
+          groups, preferences,
+          created_at, last_modified_at, last_modified_by
+        FROM
+          users_by_email
+        WHERE
+          email = ?;
+      `;
+
+      this.db.execute(query, [email], { prepare: true }, (err, result) => {
         if (err) { reject(err); }
         if (result.rows.length <= 0) { resolve(null); }
 

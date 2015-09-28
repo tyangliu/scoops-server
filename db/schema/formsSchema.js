@@ -11,7 +11,7 @@ let queries = [
       expires_at timestamp,
 
       access_groups set<text>,
-      access_users set<text>,
+      access_users set<uuid>,
 
       created_at timestamp,
       created_by uuid,
@@ -34,7 +34,7 @@ let queries = [
       expires_at timestamp,
 
       access_groups set<text>,
-      access_users set<text>,
+      access_users set<uuid>,
 
       created_at timestamp,
 
@@ -56,7 +56,7 @@ let queries = [
       expires_at timestamp STATIC,
 
       access_groups set<text> STATIC,
-      access_users set<text> STATIC,
+      access_users set<uuid> STATIC,
 
       question_text text,
       question_type text,
