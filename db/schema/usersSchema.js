@@ -16,7 +16,7 @@ let queries = [
       last_modified_at timestamp,
       last_modified_by uuid,
 
-      PRIMARY KEY (user_id, email)
+      PRIMARY KEY (user_id)
     );
   `,
   // users_by_email
@@ -34,7 +34,7 @@ let queries = [
       last_modified_at timestamp,
       last_modified_by uuid,
 
-      PRIMARY KEY (email, user_id)
+      PRIMARY KEY (email)
     );
   `
 ];

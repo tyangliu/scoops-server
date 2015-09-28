@@ -4,7 +4,7 @@ let Joi = require('joi')
   , regex = require('./regexPatterns');
 
 let patterns = {
-  shortString: Joi.string().alphanum().min(2).max(255),
+  shortString: Joi.string().min(2).max(255),
   email: Joi.string().email(),
   password: Joi.string().regex(regex.password),
   base64Uuid: Joi.string().regex(regex.base64Uuid)

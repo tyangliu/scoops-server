@@ -2,6 +2,7 @@
 
 let db = require('../db/dbClient')()
   , cassandra = require('cassandra-driver')
+  , slugid = require('slugid')
   , async = require('async');
 
 class Question {
@@ -43,8 +44,6 @@ class Form {
 
 class FormsRepository {
 
-  constructor() { this.db = db; }
-
   createForm(
     name, description, expiresAt,
     accessGroups, accessUsers, createdBy,
@@ -53,17 +52,16 @@ class FormsRepository {
     let promise = new Promise((resolve, reject) => async.waterfall([
       // (1) build question models
       (callback) => {
-        let questions = questions.map(question =>
-          new Question(
-            cassandra.types.TimeUuid.now(), // questionId
-            question.type,
-            question.label,
-            question.description,
-            question.choices
-          )
-        );
+        questions = questions || [];
+        questions = questions.map(question => new Question(
+          cassandra.types.TimeUuid.now(), // questionId
+          question.type,
+          question.label,
+          question.description,
+          question.choices
+        ));
 
-        callback(questions);
+        callback(null, questions);
       },
       // (2) build form model
       (questions, callback) => {
@@ -74,15 +72,15 @@ class FormsRepository {
           expiresAt,
           accessGroups || [], // accessGroups
           accessUsers || [], // accessUsers
-          Date.now().toISOString(), // createdAt
-          createdBy, // createdBy
+          (new Date()).toISOString(), // createdAt
+          slugid.decode(createdBy), // createdBy
           null, // lastModifiedAt
           null, // lastModifiedBy
           cassandra.types.TimeUuid.now(), // revisionId
           questions
         );
 
-        callback(form);
+        callback(null, form);
       },
       // (3) persist to forms table
       (form, callback) => {
@@ -94,11 +92,10 @@ class FormsRepository {
             last_modified_at, last_modified_by, revision_id,
             questions)
           VALUES
-            (?,?,?,?,?,?,?,?,?,?,?,?)
-          IF NOT EXISTS;
+            (?,?,?,?,?,?,?,?,?,?,?,?);
         `;
 
-        this.db.execute(query, [
+        db.execute(query, [
           form.formId, form.name, form.description, form.expiresAt,
           form.accessGroups, form.accessUsers,
           form.createdAt, form.createdBy,
@@ -117,11 +114,10 @@ class FormsRepository {
             last_modified_at, last_modified_by, revision_id,
             questions)
           VALUES
-            (?,?,?,?,?,?,?,?,?,?,?,?)
-          IF NOT EXISTS;
+            (?,?,?,?,?,?,?,?,?,?,?,?);
         `;
 
-        this.db.execute(query, [
+        db.execute(query, [
           form.createdBy, form.formId, form.name, form.description, form.expiresAt,
           form.accessGroups, form.accessUsers,
           form.createdAt,
@@ -130,19 +126,99 @@ class FormsRepository {
         ], { prepare: true }, (err, result) =>
           callback(err, form)
         );
+      },
+      // (5) normalize fields
+      (form, callback) => {
+        form.formId = slugid.encode(form.formId.toString());
+        form.createdBy = slugid.encode(form.createdBy.toString());
+        form.revisionId = slugid.encode(form.revisionId.toString());
+        form.questions.forEach(question => {
+          question.questionId = slugid.encode(question.questionId.toString());
+        });
+        callback(null, form);
       }
-      // (5) resolve/reject promise
+      // (6) resolve/reject promise
     ], (err, form) => err ? reject(err) : resolve(form)));
 
     return promise;
   }
 
   findFormById(formId) {
+    let promise = new Promise((resolve, reject) => {
+      let query = `SELECT * FROM forms WHERE form_id = ?`;
 
+      formId = slugid.decode(formId);
+
+      db.execute(query, [formId], { prepare: true }, (err, result) => {
+        if (err) { reject(err); }
+        if (result.rows.length <= 0) { resolve(null); }
+
+        let row = result.rows[0];
+        let form = new Form(
+          slugid.encode(row.form_id.toString()),
+          row.name,
+          row.description,
+          row.expires_at ? row.expires_at.toISOString() : null,
+          row.access_groups,
+          row.access_users.map(userId => slugid.encode(userId.toString())),
+          row.created_at.toISOString(),
+          slugid.encode(row.created_by.toString()),
+          row.last_modified_at ? row.last_modified_at.toISOString() : null,
+          row.last_modified_by ? slugid.encode(row.last_modified_by.toString()) : null,
+          slugid.encode(row.revision_id.toString()),
+          row.questions.map(question => new Question(
+            slugid.encode(question.question_id.toString()),
+            question.type,
+            question.label,
+            question.description,
+            question.choices
+          ))
+        );
+
+        resolve(form);
+      })
+    });
+
+    return promise;
   }
 
   findFormByCreator(createdBy) {
+    let promise = new Promise((resolve, reject) => {
+      let query = `SELECT * FROM forms_by_creator WHERE created_by = ?`;
 
+      createdBy = slugid.decode(createdBy);
+
+      db.execute(query, [createdBy], { prepare: true }, (err, result) => {
+        if (err) { reject(err); }
+        if (result.rows.length <= 0) { resolve(null); }
+
+        let row = result.rows[0];
+        let form = new Form(
+          slugid.encode(row.form_id.toString()),
+          row.name,
+          row.description,
+          row.expires_at ? row.expires_at.toISOString() : null,
+          row.access_groups,
+          row.access_users.map(userId => slugid.encode(userId.toString())),
+          row.created_at.toISOString(),
+          slugid.encode(row.created_by.toString()),
+          row.last_modified_at ? row.last_modified_at.toISOString() : null,
+          row.last_modified_by ? slugid.encode(row.last_modified_by.toString()) : null,
+          slugid.encode(row.revision_id.toString()),
+          row.questions.map(question => new Question(
+            slugid.encode(question.question_id.toString()),
+            question.type,
+            question.label,
+            question.description,
+            question.choices
+          ))
+        );
+
+        resolve(form);
+      })
+    });
+
+    return promise;
   }
 
 }

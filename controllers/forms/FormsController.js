@@ -1,19 +1,36 @@
 'use strict';
 
-let FormsRepository = require('../../repositories/FormsRepository');
+let FormsRepository = require('../../repositories/FormsRepository')
+  , repository = new FormsRepository();
 
 class FormsController {
-
-  constructor() {
-    this.repository = new FormsRepository();
-  }
 
   getForms(req, res) {
     res.send('getForms unimplemented');
   }
 
   postForms(req, res) {
-    res.send('postForms unimplemented');
+    let name = req.body.name
+      , description = req.body.description
+      , expiresAt = req.body.expiresAt
+      , accessGroups = req.body.accessGroups
+      , accessUsers = req.body.accessUsers
+      , createdBy = req.body.createdBy
+      , questions = req.body.questions;
+
+    repository.createForm(
+      name,
+      description,
+      expiresAt,
+      accessGroups,
+      accessUsers,
+      createdBy,
+      questions
+    )
+      .then(form => {
+        res.send(form);
+      })
+      .catch(err => res.send(err));
   }
 
   getFormById(req, res) {

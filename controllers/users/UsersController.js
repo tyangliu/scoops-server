@@ -1,23 +1,39 @@
 'use strict';
 
-let UsersRepository = require('../../repositories/UsersRepository');
+let UsersRepository = require('../../repositories/UsersRepository')
+  , restify = require('restify')
+  , repository = new UsersRepository();
 
 class UsersController {
-
-  constructor() {
-    this.repository = new UsersRepository();
-  }
 
   getUsers(req, res) {
     res.send('getUsers unimplemented');
   }
 
   postUsers(req, res) {
-    res.send('postUsers unimplemented');
+    let email = req.body.email
+      , password = req.body.password
+      , name = req.body.name
+      , voucher = req.body.voucher;
+
+    repository.createUser(email, password, name, voucher)
+      .then(user => {
+        user && (delete user.hashedPassword);
+        res.send(user);
+      })
+      .catch(err => res.send(err));
   }
 
   getUserById(req, res) {
-    res.send('getUserById unimplemented');
+    let userId = req.params.userId;
+
+    repository.findUserById(userId).then(user => {
+      user || res.send(
+        new restify.NotFoundError(`User with id ${userId} does not exist.`)
+      );
+      delete user.hashedPassword;
+      res.send(user);
+    });
   }
 
   getCurrentUser(req, res) {

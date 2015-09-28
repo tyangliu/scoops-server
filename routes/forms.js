@@ -17,7 +17,25 @@ function formsRoutes(server) {
 
   server.post({
     path: '/forms',
-    version: '1.0.0'
+    version: '1.0.0',
+    validation: {
+      body: {
+        name: JoiPatterns.shortString.required(),
+        description: JoiPatterns.shortString.required(),
+        expiresAt: Joi.string().isoDate(),
+        accessGroups: Joi.array().items(Joi.string().valid(
+          'SUPER', 'ADMIN', 'WRITER'
+        )),
+        accessUsers: Joi.array().items(JoiPatterns.base64Uuid),
+        createdBy: JoiPatterns.base64Uuid.required(),
+        questions: Joi.array().items(Joi.object().keys({
+          type: JoiPatterns.shortString.required(),
+          label: JoiPatterns.shortString.required(),
+          description: JoiPatterns.shortString,
+          choices: Joi.array().items(JoiPatterns.shortString)
+        }))
+      }
+    }
   }, controller.postForms);
 
   server.get({
