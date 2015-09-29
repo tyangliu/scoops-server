@@ -69,7 +69,7 @@ let queries = [
       updated_at timestamp,
       revision timeuuid,
 
-      PRIMARY KEY (start_year, start, id)
+      PRIMARY KEY (start_year, start_at, id)
     );
   `,
   // events_by_link_name
