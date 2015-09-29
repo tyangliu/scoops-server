@@ -85,7 +85,7 @@ function responsesRoutes(server) {
   let controller = new ResponsesController();
 
   server.get({
-    path: '/forms/:formId/submissions',
+    path: '/forms/:formId/responses',
     version: '1.0.0',
     validation: {
       params: {
@@ -95,7 +95,7 @@ function responsesRoutes(server) {
   }, controller.getResponses);
 
   server.post({
-    path: '/forms/:formId/submissions',
+    path: '/forms/:formId/responses',
     version: '1.0.0',
     validation: {
       params: {
@@ -110,40 +110,40 @@ function responsesRoutes(server) {
     validation: {
       params: {
         formId: JoiPatterns.base64Uuid.required(),
-        submissionId: JoiPatterns.base64Uuid.required()
+        responseId: JoiPatterns.base64Uuid.required()
       }
     }
   }, controller.getResponseById);
 
   server.del({
-    path: '/forms/:formId/submissions/:submissionId',
+    path: '/forms/:formId/responses/:responseId',
     version: '1.0.0',
     validation: {
       params: {
         formId: JoiPatterns.base64Uuid.required(),
-        submissionId: JoiPatterns.base64Uuid.required()
+        responseId: JoiPatterns.base64Uuid.required()
       }
     }
   }, controller.deleteResponseById);
 
   server.patch({
-    path: '/forms/:formId/submissions/:submissionId',
+    path: '/forms/:formId/responses/:responseId',
     version: '1.0.0',
     validation: {
       params: {
         formId: JoiPatterns.base64Uuid.required(),
-        submissionId: JoiPatterns.base64Uuid.required()
+        responseId: JoiPatterns.base64Uuid.required()
       }
     }
   }, controller.patchResponseById);
 
   server.put({
-    path: '/forms/:formId/submissions/:submissionId',
+    path: '/forms/:formId/responses/:responseId',
     version: '1.0.0',
     validation: {
       params: {
         formId: JoiPatterns.base64Uuid.required(),
-        submissionId: JoiPatterns.base64Uuid.required()
+        responseId: JoiPatterns.base64Uuid.required()
       }
     }
   }, controller.putResponsesById);
