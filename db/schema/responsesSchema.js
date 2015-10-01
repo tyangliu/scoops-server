@@ -1,6 +1,14 @@
 'use strict';
 
 let queries = [
+  // answer
+  `
+    CREATE TYPE IF NOT EXISTS answer (
+      question_id timeuuid,
+      question_label text,
+      value text
+    );
+  `,
   // form_responses
   `
     CREATE TABLE IF NOT EXISTS form_responses (
@@ -67,6 +75,27 @@ let queries = [
       answers list<frozen<answer>>,
 
       PRIMARY KEY (creator_id, id)
+    );
+  `,
+  // form_responses
+  `
+    CREATE TABLE IF NOT EXISTS form_responses_change_log (
+      form_id timeuuid,
+      id timeuuid,
+      revision timeuuid,
+
+      form frozen<form_summary> STATIC,
+
+      published boolean,
+      published_at timestamp,
+
+      creator frozen<user_summary>,
+      created_at timestamp,
+      updated_at timestamp,
+
+      answers list<frozen<answer>>,
+
+      PRIMARY KEY (form_id, id, revision)
     );
   `
 ];

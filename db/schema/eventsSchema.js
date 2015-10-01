@@ -76,6 +76,7 @@ let queries = [
   `
     CREATE TABLE IF NOT EXISTS events_by_link_name (
       link_name text,
+
       id timeuuid,
 
       name text,
@@ -92,7 +93,30 @@ let queries = [
       updated_at timestamp,
       revision timeuuid,
 
-      PRIMARY KEY (link_name, id)
+      PRIMARY KEY (link_name)
+    );
+  `,
+  // events_change_log
+  `
+    CREATE TABLE IF NOT EXISTS events_change_log (
+      id timeuuid,
+      revision timeuuid,
+
+      name text,
+      link_name text,
+      image_url text,
+
+      start_at timestamp,
+      end_at timestamp,
+
+      published boolean,
+      published_at timestamp,
+
+      creator frozen<user_summary>,
+      created_at timestamp,
+      updated_at timestamp,
+
+      PRIMARY KEY (id, revision)
     );
   `
 ];

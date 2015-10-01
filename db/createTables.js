@@ -3,18 +3,11 @@
 let async = require('async')
   , fs = require('fs')
   , db = require('./dbClient')()
-  , usersSchema = require('./schema/usersSchema')
-  , articlesSchema = require('./schema/articlesSchema')
-  , eventsSchema = require('./schema/eventsSchema')
-  , formsSchema = require('./schema/formsSchema')
-  , responsesSchema = require('./schema/responsesSchema');
+  , schema = require('./schema');
 
 let queries = [].concat(
-  usersSchema,
-  articlesSchema,
-  eventsSchema,
-  formsSchema,
-  responsesSchema
+  schema.users, schema.articles, schema.events,
+  schema.forms, schema.responses
 );
 
 async.mapSeries(queries,

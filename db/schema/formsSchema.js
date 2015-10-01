@@ -13,14 +13,6 @@ let queries = [
       choices list<text>
     );
   `,
-  // answer
-  `
-    CREATE TYPE IF NOT EXISTS answer (
-      question_id timeuuid,
-      question_label text,
-      value text
-    );
-  `,
   // form_summary
   `
     CREATE TYPE IF NOT EXISTS form_summary (
@@ -113,6 +105,7 @@ let queries = [
   `
     CREATE TABLE IF NOT EXISTS forms_by_link_name (
       link_name text,
+
       id timeuuid,
 
       name text,
@@ -132,7 +125,33 @@ let queries = [
 
       questions list<frozen<question>>,
 
-      PRIMARY KEY (link_name, id)
+      PRIMARY KEY (link_name)
+    );
+  `,
+  // forms_change_log
+  `
+    CREATE TABLE IF NOT EXISTS forms_change_log (
+      id timeuuid,
+      revision timeuuid,
+
+      name text,
+      link_name text,
+      description text,
+      image_url text,
+
+      start_at timestamp,
+      end_at timestamp,
+
+      published boolean,
+      published_at timestamp,
+
+      creator frozen<user_summary>,
+      created_at timestamp,
+      updated_at timestamp,
+
+      questions list<frozen<question>>,
+
+      PRIMARY KEY (id, revision)
     );
   `
 ];
