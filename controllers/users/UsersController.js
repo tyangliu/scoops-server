@@ -1,8 +1,7 @@
 'use strict';
 
-let UsersRepository = require('../../repositories/UsersRepository')
-  , restify = require('restify')
-  , repository = new UsersRepository();
+let restify = require('restify')
+  , repository = require('../../repositories/usersRepository');
 
 class UsersController {
 
@@ -16,7 +15,7 @@ class UsersController {
       , name = req.body.name
       , voucher = req.body.voucher;
 
-    repository.createUser(email, password, name, voucher)
+    repository.create(email, password, name, voucher)
       .then(user => {
         user && (delete user.hashedPassword);
         res.send(user);
@@ -27,7 +26,7 @@ class UsersController {
   getUserById(req, res) {
     let userId = req.params.userId;
 
-    repository.findUserById(userId).then(user => {
+    repository.findById(userId).then(user => {
       user || res.send(
         new restify.NotFoundError(`User with id ${userId} does not exist.`)
       );
