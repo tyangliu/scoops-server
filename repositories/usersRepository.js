@@ -1,6 +1,7 @@
 'use strict';
 
 let db = require('../db/dbClient')()
+  , dbHelpers = require('../db/dbHelpers')
   , cassandra = require('cassandra-driver')
   , restify = require('restify')
   , bcrypt = require('bcryptjs')
@@ -29,9 +30,44 @@ class User {
 }
 
 /**
+ * User summary model
+ */
+class UserSummary {
+  constructor(id, email, name) {
+    this.id = id;
+    this.email = email;
+    this.name = name;
+  }
+}
+
+/**
+ * Maps a user_summary UDT from a table to a UserSummary object,
+ * used by repositories of tables with embedded user_summary
+ *
+ * @param summary {Object} a user_summary UDT query result
+ * @returns {UserSummary}
+ */
+function mapSummaryToModel(summary) {
+  let id = slugid.encode(summary.id.toString())
+    , email = summary.email
+    , name = summary.name;
+
+  return new UserSummary(id, email, name);
+}
+
+/**
+ *
+ */
+function convertSummaryForPersist(summary) {
+  summary.id = slugid.decode(summary.id);
+
+  return summary;
+}
+
+/**
  * Maps a row from any users* table to a User object
  *
- * @param row a row from a users* table
+ * @param row {Object} a row from a users* table
  * @returns {User}
  */
 function mapRowToModel(row) {
@@ -59,21 +95,13 @@ function mapRowToModel(row) {
  * @returns {Promise.<User>}
  */
 function findById(id) {
-  let promise = new Promise((resolve, reject) => {
-    let query = `SELECT * FROM users WHERE id = ?`;
+  let query = `SELECT * FROM users WHERE id = ?`
+    , params = [slugid.decode(id)];
 
-    id = slugid.decode(id);
-
-    db.execute(query, [id], { prepare: true }, (err, result) => {
-      if (err) { return reject(err); }
-      if (result.rows.length <= 0) { return resolve(null); }
-
-      let user = mapRowToModel(result.rows[0]);
-      resolve(user);
-    });
+  return dbHelpers.find(query, params, {
+    rowMapper: mapRowToModel,
+    single: true
   });
-
-  return promise;
 }
 
 /**
@@ -83,21 +111,13 @@ function findById(id) {
  * @returns {Promise.<User>}
  */
 function findByEmail(email) {
-  let promise = new Promise((resolve, reject) => {
-    let query = `SELECT * FROM users_by_email WHERE email = ?`;
+  let query = `SELECT * FROM users_by_email WHERE email = ?`
+    , params = [email.toLowerCase()];
 
-    email = email.toLowerCase();
-
-    db.execute(query, [email], { prepare: true }, (err, result) => {
-      if (err) { return reject(err); }
-      if (result.rows.length <= 0) { return resolve(null); }
-
-      let user = mapRowToModel(result.rows[0]);
-      return resolve(user);
-    });
+  return dbHelpers.find(query, params, {
+    rowMapper: mapRowToModel,
+    single: true
   });
-
-  return promise;
 }
 
 /**
@@ -133,15 +153,15 @@ function create(email, password, name, voucher) {
         createdAt, updatedAt, revision
       );
 
-      return callback(null, user);
+      callback(null, user);
     },
 
     // (3) transform user model based on registration voucher if provided
     function redeemVoucher(user, callback) {
-      return callback(null, user);
+      callback(null, user);
     },
 
-    // (3) persist to users tables
+    // (4) persist to users tables
     function persist(user, callback) {
       let queries = [
         {
@@ -198,7 +218,7 @@ function create(email, password, name, voucher) {
         if (result.rows[0]['[applied]']) {
           return callback(null, user);
         }
-        return callback(new restify.ConflictError(
+        callback(new restify.ConflictError(
           'The email already exists'
         ));
       });
@@ -208,7 +228,7 @@ function create(email, password, name, voucher) {
     function normalize(user, callback) {
       user.id = slugid.encode(user.id.toString());
       user.revision = slugid.encode(user.revision.toString());
-      return callback(null, user);
+      callback(null, user);
     }
 
     // (6) resolve/reject promise
@@ -231,9 +251,11 @@ function create(email, password, name, voucher) {
  * @returns {Promise.<User>} resolves to a User with the updated fields
  */
 function update(id, fields, options) {
+  options = options || {};
+
   // TODO: implement this and add to exports when needed :)
   let promise = new Promise((resolve, reject) => {});
   return promise;
 }
 
-module.exports = { findById, findByEmail, create };
+module.exports = { mapSummaryToModel, convertSummaryForPersist, findById, findByEmail, create };
