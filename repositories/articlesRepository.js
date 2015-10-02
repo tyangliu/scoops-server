@@ -187,7 +187,7 @@ function create(name, linkName, imageId, content, published, creator) {
               published, published_at,
               creator, created_at, updated_at
             )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
           `,
           params: [
             article.id, article.revision, article.name, article.linkName,
@@ -207,7 +207,7 @@ function create(name, linkName, imageId, content, published, creator) {
               link_name, image_id, content, published,
               creator, created_at, updated_at, revision
             )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
           `,
             params: [
               (new Date(article.publishedAt)).getFullYear(),
