@@ -8,7 +8,7 @@ let queries = [
 
       name text,
       link_name text,
-      image_url text,
+      image_id timeuuid,
 
       start_at timestamp,
       end_at timestamp,
@@ -32,7 +32,7 @@ let queries = [
 
       name text,
       link_name text,
-      image_url text,
+      image_id timeuuid,
 
       start_at timestamp,
       end_at timestamp,
@@ -57,7 +57,7 @@ let queries = [
 
       name text,
       link_name text,
-      image_url text,
+      image_id timeuuid,
 
       end_at timestamp,
 
@@ -80,7 +80,7 @@ let queries = [
       id timeuuid,
 
       name text,
-      image_url text,
+      image_id timeuuid,
 
       start_at timestamp,
       end_at timestamp,
@@ -104,7 +104,7 @@ let queries = [
 
       name text,
       link_name text,
-      image_url text,
+      image_id timeuuid,
 
       start_at timestamp,
       end_at timestamp,

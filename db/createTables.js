@@ -7,7 +7,7 @@ let async = require('async')
 
 let queries = [].concat(
   schema.users, schema.articles, schema.events,
-  schema.forms, schema.responses
+  schema.forms, schema.responses, schema.files
 );
 
 async.mapSeries(queries,

@@ -14,14 +14,14 @@ let db = require('../db/dbClient')()
  */
 class Article {
   constructor(
-    id, name, linkName, imageUrl, content,
+    id, name, linkName, imageId, content,
     published, publishedAt,
     creator, createdAt, updatedAt, revision
   ) {
     this.id = id;
     this.name = name;
     this.linkName = linkName;
-    this.imageUrl = imageUrl;
+    this.imageId = imageId;
     this.content = content;
     this.published = published;
     this.publishedAt = publishedAt;
@@ -42,7 +42,7 @@ function mapRowToModel(row) {
   let id = slugid.encode(row.id.toString())
     , name = row.name
     , linkName = row.link_name
-    , imageUrl = row.image_url
+    , imageId = slugid.encode(row.image_id.toString())
     , content = row.content
     , published = row.published
     , publishedAt = row.published_at.toISOString()
@@ -52,7 +52,7 @@ function mapRowToModel(row) {
     , revision = slugid.encode(row.revision.toString());
 
   return new Article(
-    id, name, linkName, imageUrl, content,
+    id, name, linkName, imageId, content,
     published, publishedAt,
     creator, createdAt, updatedAt, revision
   );

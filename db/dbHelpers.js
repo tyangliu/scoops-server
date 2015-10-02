@@ -17,8 +17,9 @@ let db = require('./dbClient')();
  * with result(s) mapped by rowMapper if given
  */
 function find(query, params, options) {
-  let options = options || {}
-    , single = options.single
+  options = options || {};
+
+  let single = options.single
     , rowMapper = options.rowMapper;
 
   let promise = new Promise((resolve, reject) => {

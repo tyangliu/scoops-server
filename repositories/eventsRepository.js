@@ -7,23 +7,21 @@ let db = require('../db/dbClient')()
   , bcrypt = require('bcryptjs')
   , slugid = require('slugid')
   , async = require('async')
-  , usersRepository = require('./usersRepository')
-  , mapUserSummaryToModel = usersRepository.mapSummaryToModel
-  , convertUserSummaryForPersist = usersRepository.convertSummaryForPersist;
+  , usersRepository = require('./usersRepository');
 
 /**
  * Event model
  */
 class Event {
   constructor(
-    id, name, linkName, imageUrl,
+    id, name, linkName, imageId,
     startAt, endAt, published, publishedAt,
     creator, createdAt, updatedAt, revision
   ) {
     this.id = id;
     this.name = name;
     this.linkName = linkName;
-    this.imageUrl = imageUrl;
+    this.imageId = imageId;
     this.startAt = startAt;
     this.endAt = endAt;
     this.published = published;
@@ -45,18 +43,18 @@ function mapRowToModel(row) {
   let id = slugid.encode(row.id.toString())
     , name = row.name
     , linkName = row.link_name
-    , imageUrl = row.image_url
+    , imageId = slugid.encode(row.image_id.toString())
     , startAt = row.start_at.toISOString()
     , endAt = row.end_at.toISOString()
     , published = row.published
     , publishedAt = row.published_at.toISOString()
-    , creator = mapUserSummaryToModel(row.creator)
+    , creator = usersRepository.mapSummaryToModel(row.creator)
     , createdAt = row.created_at.toISOString()
     , updatedAt = row.updated_at.toISOString()
     , revision = slugid.encode(row.revision.toString());
 
   return new Event(
-    id, name, linkName, imageUrl,
+    id, name, linkName, imageId,
     startAt, endAt, published, publishedAt,
     creator, createdAt, updatedAt, revision
   );
@@ -109,8 +107,9 @@ function findByLinkName(linkName) {
  * @return {Promise.Array.<Event>}
  */
 function findByStart(options) {
-  let options = options || {}
-    , year = options.year || (new Date()).getFullYear()
+  options = options || {};
+
+  let year = options.year || (new Date()).getFullYear()
     , minStartAt = options.minStartAt
     , maxStartAt = options.maxStartAt
     , count = options.limit
@@ -138,28 +137,29 @@ function findByStart(options) {
  *
  * @param name
  * @param linkName
- * @param imageUrl
+ * @param imageId
  * @param startAt
  * @param endAt
  * @param published
  * @param creator
  * @returns {Promise.<Event>}
  */
-function create(name, linkName, imageUrl, startAt, endAt, published, creator) {
+function create(name, linkName, imageId, startAt, endAt, published, creator) {
   let promise = new Promise((resolve, reject) => async.waterfall([
 
     // (1) build event model
     function buildModel(callback) {
       let id = cassandra.types.TimeUuid.now()
         , linkName = linkName.toLowerCase()
-        , creator = convertUserSummaryForPersist(creator)
+        , imageId = slugid.decode(imageId)
+        , creator = usersRepository.decodeSummary(creator)
         , createdAt = (new Date()).toISOString()
         , updatedAt = createdAt
         , publishedAt = published ? createdAt : null
         , revision = cassandra.types.TimeUuid.now();
 
       let event = new Event(
-        id, name, linkName, imageUrl,
+        id, name, linkName, imageId,
         startAt, endAt, published, publishedAt,
         creator, createdAt, updatedAt, revision
       );
@@ -169,16 +169,118 @@ function create(name, linkName, imageUrl, startAt, endAt, published, creator) {
 
     // (2) persist to events tables
     function persist(event, callback) {
+      let queries = [
+        {
+          query: `
+            INSERT INTO events_by_link_name (
+              link_name, id, name, image_id,
+              start_at, end_at, published, published_at,
+              creator, created_at, updated_at, revision
+            )
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            IF NOT EXISTS
+          `,
+          params: [
+            event.linkName, event.id, event.name, event.imageId,
+            event.startAt, event.endAt, event.published, event.publishedAt,
+            event.creator, event.createdAt, event.updatedAt, event.revision
+          ]
+        },
+        {
+          query: `
+            INSERT INTO events (
+              id, name, link_name, image_id,
+              start_at, end_at, published, published_at,
+              creator, created_at, updated_at, revision
+            )
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+          `,
+          params: [
+            event.id, event.name, event.linkName, event.imageId,
+            event.startAt, event.endAt, event.published, event.publishedAt,
+            event.creator, event.createdAt, event.updatedAt, event.revision
+          ]
+        },
+        {
+          query: `
+            INSERT INTO events_by_creator (
+              creator_id, id, name, link_name, image_id,
+              start_at, end_at, published, published_at,
+              creator, created_at, updated_at, revision
+            )
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+          `,
+          params: [
+            event.creator.id, event.id, event.name, event.linkName, event.imageId,
+            event.startAt, event.endAt, event.published, event.publishedAt,
+            event.creator, event.createdAt, event.updatedAt, event.revision
+          ]
+        },
+        {
+          query: `
+            INSERT INTO events_by_start (
+              start_year, start_at, id, name, link_name, image_id,
+              end_at, published, published_at,
+              creator, created_at, updated_at, revision
+            )
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+          `,
+          params: [
+            (new Date(event.startAt)).getFullYear(),
+            event.startAt, event.id, event.name, event.linkName, event.imageId,
+            event.endAt, event.published, event.publishedAt,
+            event.creator, event.createdAt, event.updatedAt, event.revision
+          ]
+        },
+        {
+          query: `
+            INSERT INTO events_change_log (
+              id, revision, name, link_name, image_id,
+              start_at, end_at, published, published_at,
+              creator, created_at, updated_at
+            )
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+          `,
+          params: [
+            event.id, event.revision, event.name, event.linkName, event.imageId,
+            event.startAt, event.endAt, event.published, event.publishedAt,
+            event.creator, event.createdAt, event.updatedAt
+          ]
+        }
+      ];
 
+      db.batch(queries, { prepare: true }, (err, result) => {
+        if (err) {
+          return callback(err);
+        }
+        if (result.rows[0]['[applied]']) {
+          return callback(null, event);
+        }
+        callback(new restify.ConflictError(
+          'An event with this link name already exists'
+        ));
+      });
     },
 
     // (3) normalize field types for rest of application
     function normalize(event, callback) {
-
+      event.id = slugid.encode(event.id.toString());
+      event.imageId = slugid.decode(event.imageId.toString());
+      event.revision = slugid.encode(event.revision.toString());
+      event.creator = usersRepository.encodeSummary(event.creator);
+      callback(null, event);
     }
 
     // (4) resolve/reject promise
-  ], (err, user) => err ? reject(err) : resolve(user)));
+  ], (err, event) => err ? reject(err) : resolve(event)));
 
   return promise;
+}
+
+function update() {
+
+}
+
+function remove() {
+
 }

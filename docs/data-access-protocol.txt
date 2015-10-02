@@ -1,0 +1,36 @@
+========================================================================
+Users
+- master tables: users, users_by_email
+- embed tables:
+
+- permanent: id, email
+- embedded non-perm: name
+========================================================================
+
+Create
+------------------------------------------------------------------------
+(1) Set email to lower-case normalization
+(2) Set hashed_password to salted hash of password
+(3) Set created_at, updated_at to now
+(4) Set revision to new timeuuid
+(5) ATOMIC BATCH:
+    (a) Insert into users_by_email if exists (guarantee email uniqueness)
+    (b) Insert into users
+(6) Resolve
+
+Edit
+------------------------------------------------------------------------
+(1) Set updated_at to now
+(2) Remember current revision
+(3) Set revision to new timeuuid
+(4) ATOMIC BATCH:
+    (a) Update users if revision == current revision
+    (b) Update users_by_email if revision == current revision
+(5) Resolve
+(6) If name changed, enqueue current user id to userChanged queue
+
+Delete
+________________________________________________________________________
+
+Read
+________________________________________________________________________

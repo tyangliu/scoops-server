@@ -8,7 +8,7 @@ let queries = [
 
       name text,
       link_name text,
-      image_url text,
+      image_id timeuuid,
       content text,
 
       published boolean,
@@ -30,7 +30,7 @@ let queries = [
 
       name text,
       link_name text,
-      image_url text,
+      image_id timeuuid,
       content text,
 
       published boolean,
@@ -53,7 +53,7 @@ let queries = [
 
       name text,
       link_name text,
-      image_url text,
+      image_id timeuuid,
       content text,
 
       published boolean,
@@ -74,7 +74,7 @@ let queries = [
       id timeuuid,
 
       name text,
-      image_url text,
+      image_id timeuuid,
       content text,
 
       published boolean,
@@ -96,7 +96,7 @@ let queries = [
 
       name text,
       link_name text,
-      image_url text,
+      image_id timeuuid,
       content text,
 
       published boolean,

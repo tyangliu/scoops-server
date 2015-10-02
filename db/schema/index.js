@@ -5,5 +5,6 @@ module.exports = {
   articles: require('./articlesSchema'),
   events: require('./eventsSchema'),
   forms: require('./formsSchema'),
-  responses: require('./responsesSchema')
+  responses: require('./responsesSchema'),
+  files: require('./filesSchema')
 }

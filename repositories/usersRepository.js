@@ -56,11 +56,25 @@ function mapSummaryToModel(summary) {
 }
 
 /**
+ * Transforms a UserSummary with id decoded from base64
+ * in preparation of persisting to db
  *
+ * @param summary {UserSummary}
+ * @return {Object} user summary with decoded id
  */
-function convertSummaryForPersist(summary) {
+function decodeSummary(summary) {
   summary.id = slugid.decode(summary.id);
+  return summary;
+}
 
+/**
+ * Transforms a UserSummary with id encoded to base64
+ *
+ * @param summary {Object} user summary with decoded id
+ * @return {UserSummary} user summary with encoded id
+ */
+function encodeSummary(summary) {
+  summary.id = slugid.encode(summary.id);
   return summary;
 }
 
@@ -258,4 +272,7 @@ function update(id, fields, options) {
   return promise;
 }
 
-module.exports = { mapSummaryToModel, convertSummaryForPersist, findById, findByEmail, create };
+module.exports = {
+  mapSummaryToModel, decodeSummary, encodeSummary,
+  findById, findByEmail, create
+};
