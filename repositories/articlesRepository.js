@@ -216,7 +216,7 @@ function create(name, linkName, imageId, content, published, creator) {
               article.creator, article.createdAt, article.updatedAt, article.revision
             ]
           }
-        )
+        );
       }
 
       db.batch(queries, { prepare: true }, (err, result) => {
