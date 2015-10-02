@@ -14,12 +14,13 @@ let db = require('../db/dbClient')()
  */
 class Event {
   constructor(
-    id, name, linkName, imageId,
+    id, name, location, linkName, imageId,
     startAt, endAt, published, publishedAt,
     creator, createdAt, updatedAt, revision
   ) {
     this.id = id;
     this.name = name;
+    this.location = location;
     this.linkName = linkName;
     this.imageId = imageId;
     this.startAt = startAt;
@@ -34,6 +35,18 @@ class Event {
 }
 
 /**
+ * Location model, currently just for documentation since db result is
+ * already in correct format
+ */
+class Location {
+  constructor(name, latitude, longitude) {
+    this.name = name;
+    this.latitude = latitude;
+    this.longitude = longitude;
+  }
+}
+
+/**
  * Maps a row from any events* table to an Event object
  *
  * @param row {Object} a row from an events* table
@@ -42,6 +55,7 @@ class Event {
 function mapRowToModel(row) {
   let id = slugid.encode(row.id.toString())
     , name = row.name
+    , location = row.location
     , linkName = row.link_name
     , imageId = slugid.encode(row.image_id.toString())
     , startAt = row.start_at.toISOString()
@@ -54,7 +68,7 @@ function mapRowToModel(row) {
     , revision = slugid.encode(row.revision.toString());
 
   return new Event(
-    id, name, linkName, imageId,
+    id, name, location, linkName, imageId,
     startAt, endAt, published, publishedAt,
     creator, createdAt, updatedAt, revision
   );
@@ -144,7 +158,7 @@ function findByStart(options) {
  * @param creator
  * @returns {Promise.<Event>}
  */
-function create(name, linkName, imageId, startAt, endAt, published, creator) {
+function create(name, location, linkName, imageId, startAt, endAt, published, creator) {
   let promise = new Promise((resolve, reject) => async.waterfall([
 
     // (1) build event model
@@ -159,7 +173,7 @@ function create(name, linkName, imageId, startAt, endAt, published, creator) {
         , revision = cassandra.types.TimeUuid.now();
 
       let event = new Event(
-        id, name, linkName, imageId,
+        id, name, location, linkName, imageId,
         startAt, endAt, published, publishedAt,
         creator, createdAt, updatedAt, revision
       );
@@ -173,7 +187,7 @@ function create(name, linkName, imageId, startAt, endAt, published, creator) {
         {
           query: `
             INSERT INTO events_by_link_name (
-              link_name, id, name, image_id,
+              link_name, id, name, location, image_id,
               start_at, end_at, published, published_at,
               creator, created_at, updated_at, revision
             )
@@ -181,7 +195,7 @@ function create(name, linkName, imageId, startAt, endAt, published, creator) {
             IF NOT EXISTS
           `,
           params: [
-            event.linkName, event.id, event.name, event.imageId,
+            event.linkName, event.id, event.name, event.location, event.imageId,
             event.startAt, event.endAt, event.published, event.publishedAt,
             event.creator, event.createdAt, event.updatedAt, event.revision
           ]
@@ -189,14 +203,14 @@ function create(name, linkName, imageId, startAt, endAt, published, creator) {
         {
           query: `
             INSERT INTO events (
-              id, name, link_name, image_id,
+              id, name, location, link_name, image_id,
               start_at, end_at, published, published_at,
               creator, created_at, updated_at, revision
             )
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
           `,
           params: [
-            event.id, event.name, event.linkName, event.imageId,
+            event.id, event.name, event.location, event.linkName, event.imageId,
             event.startAt, event.endAt, event.published, event.publishedAt,
             event.creator, event.createdAt, event.updatedAt, event.revision
           ]
@@ -204,46 +218,52 @@ function create(name, linkName, imageId, startAt, endAt, published, creator) {
         {
           query: `
             INSERT INTO events_by_creator (
-              creator_id, id, name, link_name, image_id,
-              start_at, end_at, published, published_at,
+              creator_id, id, name, location,
+              link_name, image_id, start_at, end_at,
+              published, published_at,
               creator, created_at, updated_at, revision
             )
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
           `,
           params: [
-            event.creator.id, event.id, event.name, event.linkName, event.imageId,
-            event.startAt, event.endAt, event.published, event.publishedAt,
+            event.creator.id, event.id, event.name, event.location,
+            event.linkName, event.imageId, event.startAt, event.endAt,
+            event.published, event.publishedAt,
             event.creator, event.createdAt, event.updatedAt, event.revision
           ]
         },
         {
           query: `
             INSERT INTO events_by_start (
-              start_year, start_at, id, name, link_name, image_id,
-              end_at, published, published_at,
+              start_year, start_at, id, name, location,
+              link_name, image_id, end_at,
+              published, published_at,
               creator, created_at, updated_at, revision
             )
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
           `,
           params: [
             (new Date(event.startAt)).getFullYear(),
-            event.startAt, event.id, event.name, event.linkName, event.imageId,
-            event.endAt, event.published, event.publishedAt,
+            event.startAt, event.id, event.name, event.location,
+            event.linkName, event.imageId, event.endAt,
+            event.published, event.publishedAt,
             event.creator, event.createdAt, event.updatedAt, event.revision
           ]
         },
         {
           query: `
             INSERT INTO events_change_log (
-              id, revision, name, link_name, image_id,
-              start_at, end_at, published, published_at,
+              id, revision, name, location,
+              link_name, image_id, start_at, end_at,
+              published, published_at,
               creator, created_at, updated_at
             )
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
           `,
           params: [
-            event.id, event.revision, event.name, event.linkName, event.imageId,
-            event.startAt, event.endAt, event.published, event.publishedAt,
+            event.id, event.revision, event.name, event.location,
+            event.linkName, event.imageId, event.startAt, event.endAt,
+            event.published, event.publishedAt,
             event.creator, event.createdAt, event.updatedAt
           ]
         }

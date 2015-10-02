@@ -1,12 +1,21 @@
 'use strict';
 
 let queries = [
+  // location
+  `
+    CREATE TYPE IF NOT EXISTS location (
+      name text,
+      latitude float,
+      longitude float
+    )
+  `,
   // events
   `
     CREATE TABLE IF NOT EXISTS events (
       id timeuuid,
 
       name text,
+      location frozen<location>,
       link_name text,
       image_id timeuuid,
 
@@ -31,6 +40,7 @@ let queries = [
       id timeuuid,
 
       name text,
+      location frozen<location>,
       link_name text,
       image_id timeuuid,
 
@@ -56,6 +66,7 @@ let queries = [
       id timeuuid,
 
       name text,
+      location frozen<location>,
       link_name text,
       image_id timeuuid,
 
@@ -80,6 +91,7 @@ let queries = [
       id timeuuid,
 
       name text,
+      location frozen<location>,
       image_id timeuuid,
 
       start_at timestamp,
@@ -103,6 +115,7 @@ let queries = [
       revision timeuuid,
 
       name text,
+      location frozen<location>,
       link_name text,
       image_id timeuuid,
 

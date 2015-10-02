@@ -13,7 +13,9 @@ let queries = [
       creator frozen<user_summary>,
       created_at timestamp,
       updated_at timestamp,
-      revision timeuuid
+      revision timeuuid,
+
+      PRIMARY KEY (id)
     )
   `,
   // files_by_creator
@@ -26,10 +28,12 @@ let queries = [
       path text,
       size int,
 
-      creator <frozen<user_summary>,
+      creator frozen<user_summary>,
       created_at timestamp,
       updated_at timestamp,
-      revision timeuuid
+      revision timeuuid,
+
+      PRIMARY KEY (creator_id, id)
     )
   `,
   // files_by_created
@@ -43,9 +47,11 @@ let queries = [
       path text,
       size int,
 
-      creator <frozen<user_summary>,
+      creator frozen<user_summary>,
       updated_at timestamp,
-      revision timeuuid
+      revision timeuuid,
+
+      PRIMARY KEY (created_year, created_at, id)
     )
   `,
   // files_change_log
@@ -60,7 +66,9 @@ let queries = [
 
       creator frozen<user_summary>,
       created_at timestamp,
-      updated_at timestamp
+      updated_at timestamp,
+
+      PRIMARY KEY (id, revision)
     )
   `
 ];
