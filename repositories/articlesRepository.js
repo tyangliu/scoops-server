@@ -62,7 +62,7 @@ function mapRowToModel(row) {
  * Finds an article by id from the database
  *
  * @param id {string} a base64 encoded article uuid
- * @returns {Promise.<Event>}
+ * @returns {Promise.<Article>}
  */
 function findById(id) {
   let query = `SELECT * FROM articles WHERE id = ?`
@@ -78,7 +78,7 @@ function findById(id) {
  * Finds an article by link name from the database
  *
  * @param linkName {string} a unique link name of an article
- * @returns {Promise.<Event>}
+ * @returns {Promise.<Article>}
  */
 function findByLinkName(linkName) {
   let query = `SELECT * FROM articles_by_link_name WHERE link_name = ?`
