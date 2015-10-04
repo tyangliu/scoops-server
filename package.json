@@ -3,23 +3,31 @@
   "description": "SCOOPS resource server",
   "version": "1.0.0",
   "author": "Thomas Liu",
-  "main": "server.js",
+  "main": "./src/server.js",
   "private": true,
   "scripts": {
-    "start": "node server.js",
+    "start": "node ./src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "createtables": "node ./db/createTables.js"
+    "createtables": "node ./src/db/createTables.js"
   },
   "license": "MIT",
   "dependencies": {
     "async": "^1.4.2",
     "bcryptjs": "^2.3.0",
+    "bluebird": "^2.10.2",
     "cassandra-driver": "^2.2.1",
+    "humps": "^0.7.0",
     "joi": "^6.7.1",
     "lodash": "^3.10.1",
     "nconf": "^0.8.0",
+    "oauth2orize": "^1.0.1",
+    "passport": "^0.3.0",
+    "passport-oauth2-client-password": "^0.1.2",
+    "rand-token": "^0.2.1",
+    "redis": "^2.1.0",
     "restify": "^4.0.3",
     "restify-joi-middleware": "0.0.8",
-    "slugid": "^1.1.0"
+    "slugid": "^1.1.0",
+    "xdate": "^0.8.0"
   }
 }
