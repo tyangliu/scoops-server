@@ -1,6 +1,7 @@
 'use strict';
 
-let db = require('../db/client')
+let Promise = require('bluebird')
+  , db = require('../db/client')
   , dbHelpers = require('../db/helpers')
   , cassandra = require('cassandra-driver')
   , restify = require('restify')
@@ -38,10 +39,11 @@ class Article {
  * @param row {Object} a row from an articles* table
  * @returns {Article}
  */
-function mapRowToModel(row) {
+let mapRowToModel = function(row) {
   let id = slugid.encode(row.id.toString())
     , name = row.name
     , linkName = row.link_name
+    , imageUrl = row.image_url
     , content = row.content
     , published = row.published
     , publishedAt = row.published_at.toISOString()
@@ -63,7 +65,7 @@ function mapRowToModel(row) {
  * @param id {string} a base64 encoded article uuid
  * @returns {Promise.<Article>}
  */
-function findById(id) {
+let findById = function(id) {
   let query = `SELECT * FROM articles WHERE id = ?`
     , params = [slugid.decode(id)];
 
@@ -79,7 +81,7 @@ function findById(id) {
  * @param linkName {string} a unique link name of an article
  * @returns {Promise.<Article>}
  */
-function findByLinkName(linkName) {
+let findByLinkName = function(linkName) {
   let query = `SELECT * FROM articles_by_link_name WHERE link_name = ?`
     , params = [linkName];
 
@@ -89,7 +91,7 @@ function findByLinkName(linkName) {
   });
 }
 
-function findByPublished(options) {
+let findByPublished = function(options) {
   options = options || {};
 }
 
@@ -104,143 +106,124 @@ function findByPublished(options) {
  * @param creator
  * @returns {Promise.<Article>}
  */
-function create(name, linkName, imageUrl, content, published, creator) {
-  let promise = new Promise((resolve, reject) => async.waterfall([
+let create = Promise.coroutine(function *(name, linkName, imageUrl, content, published, creator) {
+  let id = cassandra.types.TimeUuid.now()
+    , linkName = linkName.toLowerCase()
+    , creator = usersRepository.decodeSummary(creator)
+    , createdAt = (new Date()).toISOString()
+    , updatedAt = createdAt
+    , publishedAt = published ? createdAt : null
+    , revision = cassandra.types.TimeUuid.now();
 
-    // (1) build article model
-    function buildModel(callback) {
-      let id = cassandra.types.TimeUuid.now()
-        , linkName = linkName.toLowerCase()
-        , creator = usersRepository.decodeSummary(creator)
-        , createdAt = (new Date()).toISOString()
-        , updatedAt = createdAt
-        , publishedAt = published ? createdAt : null
-        , revision = cassandra.types.TimeUuid.now();
+  let query = `
+    INSERT INTO articles_by_link_name (
+      link_name, id, name, image_url, content
+      published, published_at,
+      creator, created_at, updated_at, revision
+    )
+    VALUES (?,?,?,?,?,?,?,?,?,?,?)
+    IF NOT EXISTS
+  `;
 
-      let article = new Article(
-        id, name, linkName, imageUrl, content,
-        published, publishedAt,
-        creator, createdAt, updatedAt, revision
-      );
+  let params = [
+    linkName, id, name, imageUrl, content,
+    published, publishedAt,
+    creator, createdAt, updatedAt, revision
+  ];
 
-      callback(null, article);
-    },
+  let result = yield db.executeAsync(query, params, { prepare: true });
 
-    // (2) persist to articles_by_link_name table to test uniqueness
-    function persistToArticlesByLinkName(article, callback) {
-      let query = `
-        INSERT INTO articles_by_link_name (
-          link_name, id, name, image_url, content
+  if (!result.rows[0]['[applied]']) {
+    throw new restify.ConflictError('An article with the link name already exists.');
+  }
+
+  let batchQueries = [
+    {
+      query: `
+        INSERT INTO articles (
+          id, name, link_name, image_url, content,
           published, published_at,
           creator, created_at, updated_at, revision
         )
         VALUES (?,?,?,?,?,?,?,?,?,?,?)
-        IF NOT EXISTS`
-        , params = [
-          article.linkName, article.id, article.name, article.imageUrl, article.content,
-          article.published, article.publishedAt,
-          article.creator, article.createdAt, article.updatedAt, article.revision
-        ];
-
-      db.execute(query, params, { prepare: true }, (err, result) => {
-        if (err) {
-          return callback(err);
-        }
-        if (result.rows[0]['[applied]']) {
-          return callback(null, article);
-        }
-        callback(new restify.ConflictError(
-          'An article with this link name already exists'
-        ));
-      })
+      `,
+      params: [
+        id, name, linkName, imageUrl, content,
+        published, publishedAt,
+        creator, createdAt, updatedAt, revision
+      ]
     },
-
-    // (3) persist to rest of articles tables
-    function persistToRest(article, callback) {
-      let queries = [
-        {
-          query: `
-            INSERT INTO articles (
-              id, name, link_name, image_url, content,
-              published, published_at,
-              creator, created_at, updated_at, revision
-            )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-          params: [
-            article.id, article.name, article.linkName, article.imageUrl, article.content,
-            article.published, article.publishedAt,
-            article.creator, article.createdAt, article.updatedAt, article.revision
-          ]
-        },
-        {
-          query: `
-            INSERT INTO articles_by_creator (
-              creator_id, id, name, link_name,
-              image_url, content,
-              published, published_at,
-              creator, created_at, updated_at, revision
-            )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-          params: [
-            article.creator.id, article.id, article.name, article.linkName,
-            article.imageUrl, article.content,
-            article.published, article.publishedAt,
-            article.creator, article.createdAt, article.updatedAt, article.revision
-          ]
-        },
-        {
-          query: `
-            INSERT INTO articles_change_log (
-              id, revision, name, link_name,
-              image_url, content,
-              published, published_at,
-              creator, created_at, updated_at
-            )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-          params: [
-            article.id, article.revision, article.name, article.linkName,
-            article.imageUrl, article.content,
-            article.published, article.publishedAt,
-            article.creator, article.createdAt, article.updatedAt
-          ]
-        }
-      ];
-
-      if (article.published) {
-        queries.push(
-          {
-            query: `
-            INSERT INTO articles_by_published (
-              published_year, published_at, id, name,
-              link_name, image_url, content, published,
-              creator, created_at, updated_at, revision
-            )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-            params: [
-              (new Date(article.publishedAt)).getFullYear(),
-              article.publishedAt, article.id, article.name,
-              article.linkName, article.imageUrl, article.content, article.published,
-              article.creator, article.createdAt, article.updatedAt, article.revision
-            ]
-          }
-        );
-      }
-
-      db.batch(queries, { prepare: true }, (err, result) =>
-        err ? callback(err) : callback(null, article)
-      );
+    {
+      query: `
+        INSERT INTO articles_by_creator (
+          creator_id, id, name, link_name,
+          image_url, content,
+          published, published_at,
+          creator, created_at, updated_at, revision
+        )
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+      `,
+      params: [
+        creator.id, id, name, linkName,
+        imageUrl, content,
+        published, publishedAt,
+        creator, createdAt, updatedAt, revision
+      ]
     },
-
-    // (4) normalize field types for rest of application
-    function normalize(article, callback) {
-      article.id = slugid.encode(article.id.toString());
-      article.revision = slugid.encode(article.revision.toString());
-      article.creator = usersRepository.encodeSummary(article.creator);
-      callback(null, article);
+    {
+      query: `
+        INSERT INTO articles_change_log (
+          id, revision, name, link_name,
+          image_url, content,
+          published, published_at,
+          creator, created_at, updated_at
+        )
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)
+      `,
+      params: [
+        id, revision, name, linkName,
+        imageUrl, content,
+        published, publishedAt,
+        creator, createdAt, updatedAt
+      ]
     }
+  ];
 
-    // (5) resolve/reject promise
-  ], (err, article) => err ? reject(err) : resolve(article)));
+  (published) && queries.push(
+    {
+      query: `
+        INSERT INTO articles_by_published (
+          published_year, published_at, id, name,
+          link_name, image_url, content, published,
+          creator, created_at, updated_at, revision
+        )
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+      `,
+      params: [
+        (new Date(publishedAt)).getFullYear(),
+        publishedAt, id, name,
+        linkName, imageUrl, content, published,
+        creator, createdAt, updatedAt, revision
+      ]
+    }
+  );
 
-  return promise;
-}
+  yield db.batchAsync(batchQueries, { prepare: true });
+
+  id = slugid.encode(id.toString());
+  revision = slugid.encode(revision.toString());
+  creator = usersRepository.encodeSummary(creator);
+
+  return new Article(
+    id, name, linkName, imageUrl, content,
+    published, publishedAt,
+    creator, createdAt, updatedAt, revision
+  );
+});
+
+module.exports = {
+  findById,
+  findByLinkName,
+  findByPublished,
+  create
+};

@@ -1,26 +1,26 @@
 'use strict';
 
-function getArticles() {
+let getArticles = function() {
 
 }
 
-function postArticles() {
+let postArticles = function() {
 
 }
 
-function getArticleById() {
+let getArticleById = function() {
 
 }
 
-function deleteArticleById() {
+let deleteArticleById = function() {
 
 }
 
-function patchArticleById() {
+let patchArticleById = function() {
 
 }
 
-function putArticleById() {
+let putArticleById = function() {
 
 }
 
