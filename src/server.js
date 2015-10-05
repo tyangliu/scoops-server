@@ -2,6 +2,7 @@
 
 let restify = require('restify')
   , validator = require('restify-joi-middleware')
+  , passport = require('passport')
   , fs = require('fs');
 
 createServer();
@@ -16,6 +17,10 @@ function createServer() {
   server.use(restify.authorizationParser());
   server.use(restify.bodyParser());
   server.use(validator());
+  server.use(passport.initialize());
+
+  // include passport strategies
+  require('./auth/strategies');
 
   let dirs = ['./auth', './users', './articles', './events'];
   dirs.forEach(dir => require(dir + '/routes')(server));
