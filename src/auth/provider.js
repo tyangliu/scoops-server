@@ -127,8 +127,8 @@ let generateToken = Promise.coroutine(function *(client, user) {
 
   // set expiry dates for redis cleanup
   yield Promise.all([
-    redisClient.expireatAsync(tokenKey, tokenExpiry),
-    redisClient.expireatAsync(refreshKey, refreshExpiry)
+    redisClient.expireatAsync(tokenKey, config.auth.bearerTTL),
+    redisClient.expireatAsync(refreshKey, config.auth.refreshTTL)
   ]);
 
   return { token, refreshToken };
