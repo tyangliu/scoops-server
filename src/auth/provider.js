@@ -125,7 +125,7 @@ let generateToken = Promise.coroutine(function *(client, user) {
     redisClient.lpushAsync(`rl/${client}/${user.email}`, refreshKey)
   ]);
 
-  // set expiry dates for redis cleanup
+  // set expiry times for redis cleanup
   yield Promise.all([
     redisClient.expireatAsync(tokenKey, config.auth.bearerTTL),
     redisClient.expireatAsync(refreshKey, config.auth.refreshTTL)
