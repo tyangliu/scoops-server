@@ -158,14 +158,12 @@ let validateBearerToken = Promise.coroutine(function *(token) {
       redisClient.hsetAsync('b/' + sha1(token), 'new', '0')
     ];
 
-    if (keysToDel && keysToDel.length > 0) {
-      promises.concat([
-        // delete all refresh tokens marked for deletion
-        redisClient.delAsync(keysToDel),
-        // delete the list itself
-        redisClient.delAsync(`rd/${tokenProps.client}/${tokenProps.email}`)
-      ]);
-    }
+    (keysToDel && keysToDel.length > 0) && promises.concat([
+      // delete all refresh tokens marked for deletion
+      redisClient.delAsync(keysToDel),
+      // delete the list itself
+      redisClient.delAsync(`rd/${tokenProps.client}/${tokenProps.email}`)
+    ]);
 
     yield Promise.all(promises);
   }
