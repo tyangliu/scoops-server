@@ -7,7 +7,7 @@ let Promise = require('bluebird')
 
 let getUsers = function(req, res) {
   res.send('getUsers unimplemented');
-}
+};
 
 let postUsers = Promise.coroutine(function *(req, res) {
   let email = req.body.email
@@ -40,23 +40,23 @@ let getUserById = function(req, res) {
     let err = new restify.NotFoundError(`User with id ${userId} does not exist.`);
     return res.send(err);
   });
-}
+};
 
 let getCurrentUser = function(req, res) {
   res.send('getCurrentUser unimplemented');
-}
+};
 
 let deleteUserById = function(req, res) {
   res.send('deleteUserById unimplemented');
-}
+};
 
 let patchUserById = function(req, res) {
   res.send('patchUserById unimplemented');
-}
+};
 
 let putUserById = function(req, res) {
   res.send('putUserById unimplemented');
-}
+};
 
 module.exports = {
   getUsers,
@@ -66,4 +66,4 @@ module.exports = {
   deleteUserById,
   patchUserById,
   putUserById
-}
+};

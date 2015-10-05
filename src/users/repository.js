@@ -54,7 +54,7 @@ let mapSummaryToModel = function(summary) {
     , name = summary.name;
 
   return new UserSummary(id, email, name);
-}
+};
 
 /**
  * Transforms a UserSummary with id decoded from base64
@@ -66,7 +66,7 @@ let mapSummaryToModel = function(summary) {
 let decodeSummary = function(summary) {
   summary.id = slugid.decode(summary.id);
   return summary;
-}
+};
 
 /**
  * Transforms a UserSummary with id encoded to base64
@@ -77,7 +77,7 @@ let decodeSummary = function(summary) {
 let encodeSummary = function(summary) {
   summary.id = slugid.encode(summary.id);
   return summary;
-}
+};
 
 /**
  * Maps a row from any users* table to a User object
@@ -102,7 +102,7 @@ let mapRowToModel = function(row) {
     avatarUrl, groups, preferences,
     createdAt, updatedAt, revision
   );
-}
+};
 
 /**
  * Finds a user by id from the database
@@ -118,7 +118,7 @@ let findById = function(id) {
     rowMapper: mapRowToModel,
     single: true
   });
-}
+};
 
 /**
  * Finds a user by email from the database
@@ -134,7 +134,7 @@ let findByEmail = function(email) {
     rowMapper: mapRowToModel,
     single: true
   });
-}
+};
 
 /**
  * Creates and persists a new user
@@ -244,7 +244,7 @@ let update = function(id, fields, options) {
   // TODO: implement this and add to exports when needed :)
   let promise = new Promise((resolve, reject) => {});
   return promise;
-}
+};
 
 module.exports = {
   mapSummaryToModel,

@@ -57,7 +57,7 @@ let mapRowToModel = function(row) {
     published, publishedAt,
     creator, createdAt, updatedAt, revision
   );
-}
+};
 
 /**
  * Finds an article by id from the database
@@ -73,7 +73,7 @@ let findById = function(id) {
     rowMapper: mapRowToModel,
     single: true
   });
-}
+};
 
 /**
  * Finds an article by link name from the database
@@ -89,11 +89,11 @@ let findByLinkName = function(linkName) {
     rowMapper: mapRowToModel,
     single: true
   });
-}
+};
 
 let findByPublished = function(options) {
   options = options || {};
-}
+};
 
 /**
  * Creates and persists a new article
