@@ -14,5 +14,9 @@ module.exports = {
   redis: {
     host: nconf.get('REDIS_HOST') || '127.0.0.1',
     port: nconf.get('REDIS_PORT') || 6379
+  },
+  auth: {
+    bearerTTL: 7200, // 2 hours
+    refreshTTL: 5184000 // 60 days
   }
 };

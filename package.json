@@ -22,11 +22,13 @@
     "nconf": "^0.8.0",
     "oauth2orize": "^1.0.1",
     "passport": "^0.3.0",
+    "passport-http-bearer": "^1.0.1",
     "passport-oauth2-client-password": "^0.1.2",
     "rand-token": "^0.2.1",
     "redis": "^2.1.0",
     "restify": "^4.0.3",
     "restify-joi-middleware": "0.0.8",
+    "sha1": "^1.1.1",
     "slugid": "^1.1.0",
     "xdate": "^0.8.0"
   }
