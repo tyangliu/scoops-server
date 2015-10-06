@@ -74,7 +74,7 @@ let generateToken = Promise.coroutine(function *(client, user) {
       privileges: user.groups.join(' '),
       expiresAt: refreshExpiry
     }),
-    // keep track of all refresh tokens for a client/user pair;
+    // keep track of all refresh tokens for a client-user pair;
     // this list is always a superset of actually available refresh tokens
     redisClient.lpushAsync(`rl/${client}/${user.email}`, refreshKey),
     // remove all refresh tokens older than the latest 20
