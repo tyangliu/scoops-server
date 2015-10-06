@@ -75,7 +75,7 @@ let findByCreator = function(creatorId) {
  */
 let create = Promise.coroutine(function *(creator) {
   let id = cassandra.types.Uuid.random()
-    , secret = 'test'
+    , secret = randtoken.generate(24)
     , privileges = []
     , creator = usersRepository.decodeSummary(creator)
     , createdAt = (new Date()).toISOString();
