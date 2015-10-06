@@ -167,8 +167,8 @@ let refreshHandler = Promise.coroutine(function *(client, refreshToken, scope, d
 
     // generate new tokens and revoke current refresh token
     let tokens = yield generateToken(client, user);
-    // delete the just used refresh key next time a bearer token call for this
-    // client/user pair is made
+    // delete the just-used refresh key next time a bearer token call for this
+    // client-user pair is made
     yield redisClient.saddAsync(`rd/${client}/${user.email}`, refreshKey);
 
     return done(null, tokens.token, tokens.refreshToken, {
