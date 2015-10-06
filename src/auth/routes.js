@@ -4,7 +4,8 @@ let Promise = require('bluebird')
   , Joi = require('Joi')
   , JoiPatterns = require('../utils/JoiPatterns')
   , passport = require('passport')
-  , provider = require('./provider');
+  , provider = require('./provider')
+  , clientsHandlers = require('./clients/handlers');
 
 function authRoutes(server) {
   server.post({
@@ -13,6 +14,14 @@ function authRoutes(server) {
   },
     passport.authenticate('oauth2-client-password', { session: false }),
     provider.tokenExchange
+  );
+
+  server.post({
+    path: '/clients',
+    version: '1.0.0'
+  },
+    passport.authenticate('bearer', { session: false }),
+    clientsHandlers.postClients
   );
 }
 

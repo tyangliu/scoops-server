@@ -8,7 +8,7 @@ let Promise = require('bluebird')
 let typeQueries = schema.udts;
 
 let tableQueries = [].concat(
-  schema.users, schema.articles, schema.events,
+  schema.auth, schema.users, schema.articles, schema.events,
   schema.forms, schema.responses, schema.files
 );
 

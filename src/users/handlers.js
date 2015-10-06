@@ -27,20 +27,19 @@ let postUsers = Promise.coroutine(function *(req, res) {
   }
 });
 
-let getUserById = function(req, res) {
-  let userId = req.params.userId;
+let getUserById = Promise.coroutine(function *(req, res) {
+  let userId = req.params.userId
+    , user = yield repository.findById(userId)
 
-  repository.findById(userId).then(user => {
-    if (user) {
-      delete user.hashedPassword;
-      user = humps.decamelizeKeys(user);
-      return res.send(user);
-    }
+  if (user) {
+    delete user.hashedPassword;
+    user = humps.decamelizeKeys(user);
+    return res.send(user);
+  }
 
-    let err = new restify.NotFoundError(`User with id ${userId} does not exist.`);
-    return res.send(err);
-  });
-};
+  let err = new restify.NotFoundError(`User with id ${userId} does not exist.`);
+  return res.send(err);
+});
 
 let getCurrentUser = function(req, res) {
   res.send('getCurrentUser unimplemented');

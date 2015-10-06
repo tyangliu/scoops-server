@@ -247,6 +247,7 @@ let update = function(id, fields, options) {
 };
 
 module.exports = {
+  UserSummary,
   mapSummaryToModel,
   decodeSummary,
   encodeSummary,

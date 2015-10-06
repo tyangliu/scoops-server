@@ -2,13 +2,17 @@
 
 let Joi = require('Joi')
   , JoiPatterns = require('../utils/JoiPatterns')
+  , passport = require('passport')
   , handlers = require('./handlers');
 
 function usersRoutes(server) {
   server.get({
     path: '/users',
     version: '1.0.0'
-  }, handlers.getUsers);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.getUsers
+  );
 
   server.post({
     path: '/users',
@@ -26,7 +30,10 @@ function usersRoutes(server) {
   server.get({
     path: '/users/me',
     version: '1.0.0'
-  }, handlers.getCurrentUser);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.getCurrentUser
+  );
 
   server.get({
     path: '/users/:userId',
@@ -36,7 +43,10 @@ function usersRoutes(server) {
         userId: JoiPatterns.base64Uuid.required()
       }
     }
-  }, handlers.getUserById);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.getUserById
+  );
 
   server.del({
     path: '/users/:userId',
@@ -46,7 +56,10 @@ function usersRoutes(server) {
         userId: JoiPatterns.base64Uuid.required()
       }
     }
-  }, handlers.deleteUserById);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.deleteUserById
+  );
 
   server.patch({
     path: '/users/:userId',
@@ -63,7 +76,10 @@ function usersRoutes(server) {
         ))
       }
     }
-  }, handlers.patchUserById);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.patchUserById
+  );
 
   server.put({
     path: '/users/:userId',
@@ -73,7 +89,10 @@ function usersRoutes(server) {
         userId: JoiPatterns.base64Uuid.required()
       }
     }
-  }, handlers.putUserById);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.putUserById
+  );
 
   return server;
 }

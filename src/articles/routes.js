@@ -2,6 +2,7 @@
 
 let Joi = require('Joi')
   , JoiPatterns = require('../utils/JoiPatterns')
+  , passport = require('passport')
   , handlers = require('./handlers');
 
 function articlesRoutes(server) {
@@ -21,7 +22,10 @@ function articlesRoutes(server) {
         published: Joi.boolean()
       }
     }
-  }, handlers.postArticles);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.postArticles
+  );
 
   server.get({
     path: '/articles/:articleId',
@@ -41,7 +45,10 @@ function articlesRoutes(server) {
         articleId: JoiPatterns.base64Uuid.required()
       }
     }
-  }, handlers.deleteArticleById);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.deleteArticleById
+  );
 
   server.patch({
     path: '/articles/:articleId',
@@ -54,7 +61,10 @@ function articlesRoutes(server) {
 
       }
     }
-  }, handlers.patchArticleById);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.patchArticleById
+  );
 
   server.put({
     path: '/articles/:articleId',
@@ -64,7 +74,10 @@ function articlesRoutes(server) {
         articleId: JoiPatterns.base64Uuid.required()
       }
     }
-  }, handlers.putArticleById);
+  },
+    passport.authenticate('bearer', { session: false }),
+    handlers.putArticleById
+  );
 
   return server;
 }

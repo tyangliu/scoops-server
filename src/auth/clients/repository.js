@@ -1,8 +1,8 @@
 'use strict';
 
 let Promise = require('bluebird')
-  , db = require('../db/client')
-  , dbHelpers = require('../db/helpers')
+  , db = require('../../db/client')
+  , dbHelpers = require('../../db/helpers')
   , cassandra = require('cassandra-driver')
   , restify = require('restify')
   , slugid = require('slugid')
@@ -77,14 +77,15 @@ let create = Promise.coroutine(function *(creator) {
   let id = cassandra.types.Uuid.random()
     , secret = randtoken.generate(24)
     , privileges = []
-    , creator = usersRepository.decodeSummary(creator)
     , createdAt = (new Date()).toISOString();
+
+  creator = usersRepository.decodeSummary(creator);
 
   let batchQueries = [
     {
       query: `
         INSERT INTO clients (
-          id, secret, privileges, creator, createdAt
+          id, secret, privileges, creator, created_at
         )
         VALUES (?,?,?,?,?)
       `,
@@ -95,7 +96,7 @@ let create = Promise.coroutine(function *(creator) {
     {
       query: `
         INSERT INTO clients_by_creator (
-          creator_id, id, secret, privileges, creator, createdAt
+          creator_id, id, secret, privileges, creator, created_at
         )
         VALUES (?,?,?,?,?,?)
       `,
