@@ -17,28 +17,25 @@ let server = oauth2orize.createServer()
     }));
 
 /**
- * Prunes refresh tokens of a given client and user
+ * Deletes old refresh tokens of a given client and user, so that
+ * unused tokens don't build up in memory
  *
  * @param client {string} id of a client
  * @param user {User} current user
- * @param keepCount {int} the number of most recent tokens to keep,
- * deleting anything older
+ * @param keepCount {int} how many most recent tokens to keep
  */
 let pruneRefreshTokens = Promise.coroutine(function *(client, user, keepCount) {
   let refreshTokens = yield redisClient.lrangeAsync(`rl/${client}/${user.email}`, 0, -1);
 
   if (!refreshTokens || refreshTokens.length <= 0) { return; }
 
-  // keep the latest 20 tokens, and delete the rest so long-lived refreshed tokens
-  // don't build up in memory
+  // keep keepCount number of tokens from the head, and delete the rest
   let tokensToDelete = refreshTokens.slice(keepCount)
     , promises = [
-      // only keep the latest 20 tokens in list
       redisClient.ltrimAsync(`rl/${client}/${user.email}`, 0, keepCount - 1)
     ];
 
   (tokensToDelete.length > 0) && promises.push(
-    // delete rest of the tokens
     redisClient.delAsync(tokensToDelete)
   );
 
