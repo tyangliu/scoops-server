@@ -106,18 +106,20 @@ let findByPublished = function(options) {
  * @param creator
  * @returns {Promise.<Article>}
  */
-let create = Promise.coroutine(function *(name, linkName, imageUrl, content, published, creator) {
+let create = Promise.coroutine(function *(name, linkName, content, published, creator) {
   let id = cassandra.types.TimeUuid.now()
-    , linkName = linkName.toLowerCase()
-    , creator = usersRepository.decodeSummary(creator)
+    , imageUrl = null
     , createdAt = (new Date()).toISOString()
     , updatedAt = createdAt
     , publishedAt = published ? createdAt : null
     , revision = cassandra.types.TimeUuid.now();
 
+  linkName = linkName.toLowerCase();
+  creator = usersRepository.decodeSummary(creator);
+
   let query = `
     INSERT INTO articles_by_link_name (
-      link_name, id, name, image_url, content
+      link_name, id, name, image_url, content,
       published, published_at,
       creator, created_at, updated_at, revision
     )
@@ -189,7 +191,7 @@ let create = Promise.coroutine(function *(name, linkName, imageUrl, content, pub
     }
   ];
 
-  (published) && queries.push(
+  (published) && batchQueries.push(
     {
       query: `
         INSERT INTO articles_by_published (
