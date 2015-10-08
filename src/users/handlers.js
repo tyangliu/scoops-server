@@ -21,7 +21,7 @@ let postUsers = Promise.coroutine(function *(req, res) {
       delete user.hashedPassword;
       user = humps.decamelizeKeys(user);
     }
-    res.send(user);
+    res.send(201, user);
   } catch (err) {
     res.send(err);
   }

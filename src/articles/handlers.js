@@ -27,7 +27,7 @@ let postArticles = Promise.coroutine(function *(req, res) {
     if (article) {
       article = humps.decamelizeKeys(article);
     }
-    res.send(article);
+    res.send(201, article);
   } catch (err) {
     res.send(err);
   }
