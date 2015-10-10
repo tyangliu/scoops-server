@@ -1,10 +1,10 @@
 'use strict';
 
-let db = require('../db/client')
+let Promise = require('bluebird')
+  , db = require('../db/client')
   , dbHelpers = require('../db/helpers')
   , cassandra = require('cassandra-driver')
   , restify = require('restify')
-  , bcrypt = require('bcryptjs')
   , slugid = require('slugid')
   , async = require('async')
   , usersRepository = require('../users/repository');
@@ -52,7 +52,7 @@ class Location {
  * @param row {Object} a row from an events* table
  * @returns {Event}
  */
-function mapRowToModel(row) {
+let mapRowToModel = function(row) {
   let id = slugid.encode(row.id.toString())
     , name = row.name
     , location = row.location
@@ -79,7 +79,7 @@ function mapRowToModel(row) {
  * @param id {string} a base64 encoded event uuid
  * @returns {Promise.<Event>}
  */
-function findById(id) {
+let findById = function(id) {
   let query = `SELECT * FROM events WHERE id = ?`
     , params = [slugid.decode(id)];
 
@@ -95,7 +95,7 @@ function findById(id) {
  * @param linkName {string} a unique link name of an event
  * @returns {Promise.<Event>}
  */
-function findByLinkName(linkName) {
+let findByLinkName = function(linkName) {
   let query = `SELECT * FROM events_by_link_name WHERE link_name = ?`
     , params = [linkName];
 
@@ -119,7 +119,7 @@ function findByLinkName(linkName) {
  * ascending or descending order of start datetime
  * @return {Promise.Array.<Event>}
  */
-function findByStart(options) {
+let findByStart = function(options) {
   options = options || {};
 
   let year = options.year || (new Date()).getFullYear()
@@ -157,148 +157,133 @@ function findByStart(options) {
  * @param creator
  * @returns {Promise.<Event>}
  */
-function create(name, location, linkName, imageUrl, startAt, endAt, published, creator) {
-  let promise = new Promise((resolve, reject) => async.waterfall([
+let create = Promise.coroutine(function *(name, location, linkName, startAt, endAt, published, creator) {
+  let id = cassandra.types.TimeUuid.now()
+    , imageUrl = null
+    , createdAt = (new Date()).toISOString()
+    , updatedAt = createdAt
+    , publishedAt = published ? createdAt : null
+    , revision = cassandra.types.TimeUuid.now();
 
-    // (1) build event model
-    function buildModel(callback) {
-      let id = cassandra.types.TimeUuid.now()
-        , linkName = linkName.toLowerCase()
-        , creator = usersRepository.decodeSummary(creator)
-        , createdAt = (new Date()).toISOString()
-        , updatedAt = createdAt
-        , publishedAt = published ? createdAt : null
-        , revision = cassandra.types.TimeUuid.now();
+  linkName = linkName.toLowerCase();
+  creator = usersRepository.decodeSummary(creator);
 
-      let event = new Event(
-        id, name, location, linkName, imageUrl,
-        startAt, endAt, published, publishedAt,
-        creator, createdAt, updatedAt, revision
-      );
+  let query = `
+    INSERT INTO events_by_link_name (
+      link_name, id, name, location, image_url,
+      start_at, end_at, published, published_at,
+      creator, created_at, updated_at, revision
+    )
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+    IF NOT EXISTS
+  `;
+  
+  let params = [
+    linkName, id, name, location, imageUrl,
+    startAt, endAt, published, publishedAt,
+    creator, createdAt, updatedAt, revision
+  ];
 
-      callback(null, event);
-    },
+  let result = yield db.executeAsync(query, params, { prepare: true });
 
-    // (2) persist to events_by_link_name first to test uniqueness
-    function persistToEventsByLinkName(event, callback) {
-      let query = `
-        INSERT INTO events_by_link_name (
-          link_name, id, name, location, image_url,
+  if (!result.rows[0]['[applied]']) {
+    throw new restify.ConflictError('An article with the link name already exists.');
+  }
+
+  let batchQueries = [
+    {
+      query: `
+        INSERT INTO events (
+          id, name, location, link_name, image_url,
           start_at, end_at, published, published_at,
           creator, created_at, updated_at, revision
         )
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-        IF NOT EXISTS`
-        , params = [
-          event.linkName, event.id, event.name, event.location, event.imageUrl,
-          event.startAt, event.endAt, event.published, event.publishedAt,
-          event.creator, event.createdAt, event.updatedAt, event.revision
-        ];
-
-      db.execute(query, params, { prepare: true }, (err, result) => {
-        if (err) {
-          return callback(err);
-        }
-        if (result.rows[0]['[applied]']) {
-          return callback(null, event);
-        }
-        callback(new restify.ConflictError(
-          'An event with this link name already exists'
-        ));
-      });
+      `,
+      params: [
+        id, name, location, linkName, imageUrl,
+        startAt, endAt, published, publishedAt,
+        creator, createdAt, updatedAt, revision
+      ]
     },
-
-    // (3) persist to rest of events tables
-    function persistToRest(event, callback) {
-      let queries = [
-        {
-          query: `
-            INSERT INTO events (
-              id, name, location, link_name, image_url,
-              start_at, end_at, published, published_at,
-              creator, created_at, updated_at, revision
-            )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-          params: [
-            event.id, event.name, event.location, event.linkName, event.imageUrl,
-            event.startAt, event.endAt, event.published, event.publishedAt,
-            event.creator, event.createdAt, event.updatedAt, event.revision
-          ]
-        },
-        {
-          query: `
-            INSERT INTO events_by_creator (
-              creator_id, id, name, location,
-              link_name, image_url, start_at, end_at,
-              published, published_at,
-              creator, created_at, updated_at, revision
-            )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-          params: [
-            event.creator.id, event.id, event.name, event.location,
-            event.linkName, event.imageUrl, event.startAt, event.endAt,
-            event.published, event.publishedAt,
-            event.creator, event.createdAt, event.updatedAt, event.revision
-          ]
-        },
-        {
-          query: `
-            INSERT INTO events_by_start (
-              start_year, start_at, id, name, location,
-              link_name, image_url, end_at,
-              published, published_at,
-              creator, created_at, updated_at, revision
-            )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-          params: [
-            (new Date(event.startAt)).getFullYear(),
-            event.startAt, event.id, event.name, event.location,
-            event.linkName, event.imageUrl, event.endAt,
-            event.published, event.publishedAt,
-            event.creator, event.createdAt, event.updatedAt, event.revision
-          ]
-        },
-        {
-          query: `
-            INSERT INTO events_change_log (
-              id, revision, name, location,
-              link_name, image_url, start_at, end_at,
-              published, published_at,
-              creator, created_at, updated_at
-            )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-          params: [
-            event.id, event.revision, event.name, event.location,
-            event.linkName, event.imageUrl, event.startAt, event.endAt,
-            event.published, event.publishedAt,
-            event.creator, event.createdAt, event.updatedAt
-          ]
-        }
-      ];
-
-      db.batch(queries, { prepare: true }, (err, result) =>
-        err ? callback(err) : callback(null, event)
-      );
+    {
+      query: `
+        INSERT INTO events_by_creator (
+          creator_id, id, name, location,
+          link_name, image_url, start_at, end_at,
+          published, published_at,
+          creator, created_at, updated_at, revision
+        )
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+      `,
+      params: [
+        creator.id, id, name, location,
+        linkName, imageUrl, startAt, endAt,
+        published, publishedAt,
+        creator, createdAt, updatedAt, revision
+      ]
     },
-
-    // (4) normalize field types for rest of application
-    function normalize(event, callback) {
-      event.id = slugid.encode(event.id.toString());
-      event.revision = slugid.encode(event.revision.toString());
-      event.creator = usersRepository.encodeSummary(event.creator);
-      callback(null, event);
+    {
+      query: `
+        INSERT INTO events_by_start (
+          start_year, start_at, id, name, location,
+          link_name, image_url, end_at,
+          published, published_at,
+          creator, created_at, updated_at, revision
+        )
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+      `,
+      params: [
+        (new Date(startAt)).getFullYear(),
+        startAt, id, name, location,
+        linkName, imageUrl, endAt,
+        published, publishedAt,
+        creator, createdAt, updatedAt, revision
+      ]
+    },
+    {
+      query: `
+        INSERT INTO events_change_log (
+          id, revision, name, location,
+          link_name, image_url, start_at, end_at,
+          published, published_at,
+          creator, created_at, updated_at
+        )
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+      `,
+      params: [
+        id, revision, name, location,
+        linkName, imageUrl, startAt, endAt,
+        published, publishedAt,
+        creator, createdAt, updatedAt
+      ]
     }
+  ];
 
-    // (5) resolve/reject promise
-  ], (err, event) => err ? reject(err) : resolve(event)));
+  yield db.batchAsync(batchQueries, { prepare: true });
 
-  return promise;
-}
+  id = slugid.encode(id.toString());
+  revision = slugid.encode(revision.toString());
+  creator = usersRepository.encodeSummary(creator);
 
-function update() {
+  return new Event(
+    id, name, location, linkName, imageUrl,
+    startAt, endAt, published, publishedAt,
+    creator, createdAt, updatedAt, revision
+  );
+});
 
-}
+let update = function() {
 
-function remove() {
+};
 
-}
+let remove = function() {
+
+};
+
+module.exports = {
+  findById,
+  findByLinkName,
+  findByStart,
+  create
+};

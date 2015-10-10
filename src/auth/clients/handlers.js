@@ -17,7 +17,7 @@ let postClients = Promise.coroutine(function *(req, res) {
     if (client) {
       client = humps.decamelizeKeys(client);
     }
-    res.send(client);
+    res.send(201, client);
   } catch (err) {
     res.send(err);
   }
