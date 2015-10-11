@@ -1,7 +1,6 @@
 'use strict';
 
 let restify = require('restify')
-  , validator = require('restify-joi-middleware')
   , passport = require('passport')
   , fs = require('fs');
 
@@ -15,8 +14,6 @@ function createServer() {
   server.use(restify.acceptParser(server.acceptable));
   server.use(restify.queryParser());
   server.use(restify.authorizationParser());
-  server.use(restify.bodyParser());
-  server.use(validator());
   server.use(passport.initialize());
 
   // include passport strategies

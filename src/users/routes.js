@@ -1,11 +1,13 @@
 'use strict';
 
-let Joi = require('Joi')
-  , JoiPatterns = require('../utils/JoiPatterns')
+let restify = require('restify')
   , passport = require('passport')
+  , validator = require('restify-joi-middleware')
+  , Joi = require('Joi')
+  , JoiPatterns = require('../utils/JoiPatterns')
   , handlers = require('./handlers');
 
-function usersRoutes(server) {
+module.exports = function(server) {
   server.get({
     path: '/users',
     version: '1.0.0'
@@ -25,7 +27,11 @@ function usersRoutes(server) {
         voucher: JoiPatterns.base64Uuid
       }
     }
-  }, handlers.postUsers);
+  },
+    restify.bodyParser(),
+    validator(),
+    handlers.postUsers
+  );
 
   server.get({
     path: '/users/me',
@@ -45,6 +51,7 @@ function usersRoutes(server) {
     }
   },
     passport.authenticate('bearer', { session: false }),
+    validator(),
     handlers.getUserById
   );
 
@@ -58,6 +65,7 @@ function usersRoutes(server) {
     }
   },
     passport.authenticate('bearer', { session: false }),
+    validator(),
     handlers.deleteUserById
   );
 
@@ -78,6 +86,8 @@ function usersRoutes(server) {
     }
   },
     passport.authenticate('bearer', { session: false }),
+    restify.bodyParser(),
+    validator(),
     handlers.patchUserById
   );
 
@@ -91,10 +101,9 @@ function usersRoutes(server) {
     }
   },
     passport.authenticate('bearer', { session: false }),
+    validator(),
     handlers.putUserById
   );
 
   return server;
 }
-
-module.exports = usersRoutes;

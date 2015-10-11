@@ -1,17 +1,16 @@
 'use strict';
 
-let Promise = require('bluebird')
-  , Joi = require('Joi')
-  , JoiPatterns = require('../utils/JoiPatterns')
+let restify = require('restify')
   , passport = require('passport')
   , provider = require('./provider')
   , clientsHandlers = require('./clients/handlers');
 
-function authRoutes(server) {
+module.exports = function(server) {
   server.post({
     path: '/token',
     version: '1.0.0'
   },
+    restify.bodyParser(),
     passport.authenticate('oauth2-client-password', { session: false }),
     provider.tokenExchange
   );
@@ -24,5 +23,3 @@ function authRoutes(server) {
     clientsHandlers.postClients
   );
 }
-
-module.exports = authRoutes;

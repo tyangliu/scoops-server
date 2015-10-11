@@ -57,6 +57,7 @@ let mapRowToModel = function(row) {
     , name = row.name
     , location = row.location
     , linkName = row.link_name
+    , imageUrl = row.image_url
     , startAt = row.start_at.toISOString()
     , endAt = row.end_at.toISOString()
     , published = row.published

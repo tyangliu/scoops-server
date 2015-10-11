@@ -1,11 +1,13 @@
 'use strict';
 
-let Joi = require('Joi')
-  , JoiPatterns = require('../utils/JoiPatterns')
+let restify = require('restify')
   , passport = require('passport')
+  , validator = require('restify-joi-middleware')
+  , Joi = require('Joi')
+  , JoiPatterns = require('../utils/JoiPatterns')
   , handlers = require('./handlers');
 
-function articlesRoutes(server) {
+module.exports = function(server) {
   server.get({
     path: '/articles',
     version: '1.0.0'
@@ -24,6 +26,8 @@ function articlesRoutes(server) {
     }
   },
     passport.authenticate('bearer', { session: false }),
+    restify.bodyParser(),
+    validator(),
     handlers.postArticles
   );
 
@@ -35,7 +39,10 @@ function articlesRoutes(server) {
         articleId: JoiPatterns.base64Uuid.required()
       }
     }
-  }, handlers.getArticleById);
+  },
+    validator(),
+    handlers.getArticleById
+  );
 
   server.del({
     path: '/articles/:articleId',
@@ -47,6 +54,7 @@ function articlesRoutes(server) {
     }
   },
     passport.authenticate('bearer', { session: false }),
+    validator(),
     handlers.deleteArticleById
   );
 
@@ -63,6 +71,8 @@ function articlesRoutes(server) {
     }
   },
     passport.authenticate('bearer', { session: false }),
+    restify.bodyParser(),
+    validator(),
     handlers.patchArticleById
   );
 
@@ -76,10 +86,9 @@ function articlesRoutes(server) {
     }
   },
     passport.authenticate('bearer', { session: false }),
+    validator(),
     handlers.putArticleById
   );
 
   return server;
 }
-
-module.exports = articlesRoutes;
