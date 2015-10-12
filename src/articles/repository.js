@@ -106,13 +106,14 @@ let findByPublished = function(options) {
  * @param creator
  * @returns {Promise.<Article>}
  */
-let create = Promise.coroutine(function *(name, linkName, content, published, creator) {
+let create = Promise.coroutine(function *(name, linkName, content, published, publishedAt, creator) {
   let id = cassandra.types.TimeUuid.now()
     , imageUrl = null
     , createdAt = (new Date()).toISOString()
     , updatedAt = createdAt
-    , publishedAt = published ? createdAt : null
     , revision = cassandra.types.TimeUuid.now();
+
+  publishedAt = publishedAt || published ? createdAt : null;
 
   linkName = linkName.toLowerCase();
   creator = usersRepository.decodeSummary(creator);
@@ -223,9 +224,153 @@ let create = Promise.coroutine(function *(name, linkName, content, published, cr
   );
 });
 
+/**
+ * Updates the fields of an existing article in the db
+ *
+ * @param id {string} a base-64 encoded article uuid
+ * @param fields {Object} the fields to update
+ * @return {Article} the updated article object
+ */
+let update = Promise.coroutine(function *(id, fields) {
+  let article = yield findById(id);
+
+  if (!article) {
+    throw new restify.NotFoundError(`Article with id ${id} does not exist.`);
+  }
+
+  let isNewlyPublished = !article.published && fields.published && !article.publishedAt;
+
+  let name = fields.name || article.name
+    , linkName = article.linkName
+    , imageUrl = fields.imageUrl || article.imageUrl
+    , content = fields.content || article.content
+    , creator = usersRepository.decodeSummary(article.creator)
+    , createdAt = article.createdAt
+    , updatedAt = (new Date()).toISOString()
+    , published = fields.published || article.published
+    , publishedAt = isNewlyPublished ? updatedAt : article.publishedAt
+    , currRevision = slugid.decode(article.revision)
+    , newRevision = cassandra.types.TimeUuid.now();
+
+  id = slugid.decode(id);
+
+  let query = `
+    UPDATE articles
+    SET name = ?, image_url = ?, content = ?, published = ?,
+        published_at = ?, updated_at = ?, revision = ?
+    WHERE id = ?
+    IF revision = ?
+  `;
+
+  let params = [
+    name, imageUrl, content, published,
+    publishedAt, updatedAt, newRevision,
+    id, currRevision
+  ];
+
+  let result = yield db.executeAsync(query, params, { prepare: true });
+
+  if (!result.rows[0]['[applied]']) {
+    throw new restify.ConflictError('The article may have been updated by someone else.');
+  }
+
+  let queries = [
+    {
+      query: `
+        UPDATE articles_by_link_name
+        SET name = ?, image_url = ?, content = ?, published = ?,
+            published_at = ?, updated_at = ?, revision = ?
+        WHERE link_name = ?
+      `,
+      params: [
+        name, imageUrl, content, published,
+        publishedAt, updatedAt, newRevision,
+        linkName
+      ]
+    },
+    {
+      query: `
+        UPDATE articles_by_creator
+        SET name = ?, image_url = ?, content = ?, published = ?,
+            published_at = ?, updated_at = ?, revision = ?
+        WHERE creator_id = ? AND id = ?
+      `,
+      params: [
+        name, imageUrl, content, published,
+        publishedAt, updatedAt, newRevision,
+        creator.id, id
+      ]
+    },
+    {
+      query: `
+        INSERT INTO articles_change_log (
+          id, revision, name, link_name,
+          image_url, content,
+          published, published_at,
+          creator, created_at, updated_at
+        )
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)
+      `,
+      params: [
+        id, newRevision, name, linkName,
+        imageUrl, content,
+        published, publishedAt,
+        creator, createdAt, updatedAt
+      ]
+    }
+  ];
+
+  queries.push(isNewlyPublished ?
+    {
+      query: `
+      INSERT INTO articles_by_published (
+        published_year, published_at, id, name,
+        link_name, image_url, content, published,
+        creator, created_at, updated_at, revision
+      )
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+    `,
+      params: [
+        (new Date(publishedAt)).getFullYear(),
+        publishedAt, id, name,
+        linkName, imageUrl, content, published,
+        creator, createdAt, updatedAt, newRevision
+      ]
+    } :
+    {
+      query: `
+        UPDATE articles_by_published
+        SET name = ?, image_url = ?, content = ?, published = ?,
+            updated_at = ?, revision = ?
+        WHERE published_year = ? AND published_at = ? and id = ?
+      `,
+      params: [
+        name, imageUrl, content, published,
+        updatedAt, newRevision,
+        (new Date(publishedAt)).getFullYear(), publishedAt, id
+      ]
+    }
+  );
+
+  yield Promise.all(queries.map(item =>
+    db.executeAsync(item.query, item.params, { prepare: true })
+  ));
+
+  id = slugid.encode(id.toString());
+  newRevision = slugid.encode(newRevision.toString());
+  creator = usersRepository.encodeSummary(creator);
+
+  return new Article(
+    id, name, linkName, imageUrl, content,
+    published, publishedAt,
+    creator, createdAt, updatedAt, newRevision
+  );
+});
+
 module.exports = {
   findById,
   findByLinkName,
   findByPublished,
-  create
+  create,
+  update
 };

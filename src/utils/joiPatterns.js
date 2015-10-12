@@ -8,6 +8,7 @@ let patterns = {
   email: Joi.string().email(),
   password: Joi.string().regex(regex.password),
   base64Uuid: Joi.string().regex(regex.base64Uuid),
+  imageMimeType: Joi.string().regex(regex.imageMimeType),
 
   userSummary: Joi.object().keys({
     id: Joi.string().regex(regex.base64Uuid),

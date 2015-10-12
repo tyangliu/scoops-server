@@ -21,7 +21,8 @@ module.exports = function(server) {
         name: JoiPatterns.shortString.required(),
         linkName: JoiPatterns.shortString.required(),
         content: Joi.string().required(),
-        published: Joi.boolean()
+        published: Joi.boolean(),
+        publishedAt: Joi.string().isoDate()
       }
     }
   },
@@ -66,7 +67,9 @@ module.exports = function(server) {
         articleId: JoiPatterns.base64Uuid.required()
       },
       body: {
-
+        name: JoiPatterns.shortString,
+        content: Joi.string(),
+        published: Joi.boolean()
       }
     }
   },
@@ -88,6 +91,23 @@ module.exports = function(server) {
     passport.authenticate('bearer', { session: false }),
     validator(),
     handlers.putArticleById
+  );
+
+  server.put({
+    path: '/articles/:articleId/image',
+    version: '1.0.0',
+    validation: {
+      params: {
+        articleId: JoiPatterns.base64Uuid.required()
+      },
+      headers: {
+        'content-type': JoiPatterns.imageMimeType.required()
+      }
+    }
+  },
+    passport.authenticate('bearer', { session: false }),
+    validator(),
+    handlers.putArticleImageById
   );
 
   return server;

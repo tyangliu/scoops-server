@@ -18,5 +18,10 @@ module.exports = {
   auth: {
     bearerTTL: 7200, // 2 hours
     refreshTTL: 5184000 // 60 days
+  },
+  uploads: {
+    path: __dirname + '/../uploads/',
+    articlesPath: __dirname + '/../uploads/articlesImages/',
+    eventsPath: __dirname + '/../uploads/eventsImages/'
   }
 };
