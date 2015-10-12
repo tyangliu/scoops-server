@@ -10,6 +10,8 @@ let getUsers = function(req, res) {
 };
 
 let postUsers = Promise.coroutine(function *(req, res) {
+  req.body = humps.camelizeKeys(req.body);
+
   let email = req.body.email
     , password = req.body.password
     , name = req.body.name

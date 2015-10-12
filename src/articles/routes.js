@@ -19,10 +19,10 @@ module.exports = function(server) {
     validation: {
       body: {
         name: JoiPatterns.shortString.required(),
-        linkName: JoiPatterns.shortString.required(),
+        link_name: JoiPatterns.shortString.required(),
         content: Joi.string().required(),
         published: Joi.boolean(),
-        publishedAt: Joi.string().isoDate()
+        published_at: Joi.string().isoDate()
       }
     }
   },

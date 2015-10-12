@@ -14,6 +14,8 @@ let getArticles = function() {
 };
 
 let postArticles = Promise.coroutine(function *(req, res) {
+  req.body = humps.camelizeKeys(req.body);
+
   let name = req.body.name
     , linkName = req.body.linkName
     , content = req.body.content
@@ -56,6 +58,8 @@ let deleteArticleById = function(req, res) {
 };
 
 let patchArticleById = Promise.coroutine(function *(req, res) {
+  req.body = humps.camelizeKeys(req.body);
+
   let articleId = req.params.articleId
     , fields = req.body;
 
