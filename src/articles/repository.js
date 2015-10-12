@@ -247,7 +247,7 @@ let update = Promise.coroutine(function *(id, fields) {
     , creator = usersRepository.decodeSummary(article.creator)
     , createdAt = article.createdAt
     , updatedAt = (new Date()).toISOString()
-    , published = fields.published || article.published
+    , published = (fields.published !== undefined) ? fields.published : article.published
     , publishedAt = isNewlyPublished ? updatedAt : article.publishedAt
     , currRevision = slugid.decode(article.revision)
     , newRevision = cassandra.types.TimeUuid.now();
