@@ -11,4 +11,12 @@ The server provides public endpoints for user registration, and reading articles
 4. **Set up Redis** - A Redis instance, preferably local for fast read speeds, is required for the storage of authentication tokens. The host and port must be configured in **config.json**.
 5. **Start the Server** - Run **npm start**.
 
+## Project Structure
+Source files are in the src/ directory, organized by feature modules. Modules include the following parts:
+- routes.js - The set of routes for the module; a function that can be invoked on a restify server object to append the routes; includes configuration for authentication and validation
+- handlers.js - Contains the route handler functions that 'glues' the endpoints to the database and does any error-handling beyond auth and validation (e.g. 404s)
+- repository.js - Contains the database access functions
+
+
+
 
