@@ -180,7 +180,7 @@ let create = Promise.coroutine(function *(email, password, name, voucher) {
     throw new restify.ConflictError('The email already exists.');
   }
 
-  let batchQueries = [
+  let queries = [
     {
       query: `
         INSERT INTO users (
@@ -213,7 +213,9 @@ let create = Promise.coroutine(function *(email, password, name, voucher) {
     }
   ];
 
-  yield db.batchAsync(batchQueries, { prepare: true });
+  yield Promise.all(queries.map(item =>
+    db.executeAsync(item.query, item.params, { prepare: true })
+  ));
 
   id = slugid.encode(id.toString());
   revision = slugid.encode(revision.toString());

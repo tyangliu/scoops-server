@@ -81,7 +81,7 @@ let create = Promise.coroutine(function *(creator) {
 
   creator = usersRepository.decodeSummary(creator);
 
-  let batchQueries = [
+  let queries = [
     {
       query: `
         INSERT INTO clients (
@@ -106,7 +106,9 @@ let create = Promise.coroutine(function *(creator) {
     }
   ];
 
-  yield db.batchAsync(batchQueries, { prepare: true });
+  yield Promise.all(queries.map(item =>
+    db.executeAsync(item.query, item.params, { prepare: true })
+  ));
 
   id = slugid.encode(id.toString());
   creator = usersRepository.encodeSummary(creator);

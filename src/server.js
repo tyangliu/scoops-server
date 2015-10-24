@@ -22,7 +22,7 @@ function createServer() {
   let dirs = ['./auth', './users', './articles', './events'];
   dirs.forEach(dir => require(dir + '/routes')(server));
 
-  server.listen(8080, () => {
+  server.listen(9432, () => {
     console.log('%s listening at %s', server.name, server.url);
   });
 

@@ -191,7 +191,7 @@ let create = Promise.coroutine(function *(name, location, linkName, startAt, end
     throw new restify.ConflictError('An article with the link name already exists.');
   }
 
-  let batchQueries = [
+  let queries = [
     {
       query: `
         INSERT INTO events (
@@ -261,7 +261,9 @@ let create = Promise.coroutine(function *(name, location, linkName, startAt, end
     }
   ];
 
-  yield db.batchAsync(batchQueries, { prepare: true });
+  yield Promise.all(queries.map(item =>
+    db.executeAsync(item.query, item.params, { prepare: true })
+  ));
 
   id = slugid.encode(id.toString());
   revision = slugid.encode(revision.toString());
